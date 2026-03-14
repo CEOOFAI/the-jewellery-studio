@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TJS Internal</title>
+  <meta name="robots" content="noindex, nofollow">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: { DEFAULT: '#1B2A3F', deep: '#142234', card: '#213349', darkest: '#0F1C2B', light: '#2A3D57' },
+            gold: { DEFAULT: '#C9A84C', muted: '#A8873C', dim: 'rgba(201,168,76,0.2)', glow: 'rgba(201,168,76,0.15)' },
+            warm: '#F5F0E8',
+            muted: '#9BA8B5',
+            dim: '#4A5A6A',
+          },
+          fontFamily: {
+            display: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+            body: ['"Jost"', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { font-family: 'Jost', system-ui, sans-serif; }
+    body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+    /* Selection */
+    ::selection { background: rgba(201,168,76,0.3); color: #F5F0E8; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #142234; }
+    ::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.3); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(201,168,76,0.5); }
+
+    /* Login */
+    .login-card { backdrop-filter: blur(20px); }
+
+    /* Filter pills */
+    .filter-btn {
+      background: #213349;
+      color: #9BA8B5;
+      border: 1px solid rgba(201,168,76,0.15);
+      font-family: 'Jost', system-ui, sans-serif;
+      font-weight: 400;
+      letter-spacing: 0.05em;
+    }
+    .filter-btn:hover { border-color: rgba(201,168,76,0.4); color: #F5F0E8; }
+    .filter-btn.active {
+      background: #C9A84C;
+      color: #0F1C2B;
+      border-color: #C9A84C;
+      font-weight: 500;
+    }
+
+    /* Product cards */
+    .product-card {
+      transition: all 0.3s ease;
+      border: 1px solid rgba(201,168,76,0.1);
+    }
+    .product-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+      border-color: rgba(201,168,76,0.25);
+    }
+
+    /* Status dots */
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 6px currentColor; }
+    .status-active { background: #22C55E; color: #22C55E; }
+    .status-inactive { background: #EF4444; color: #EF4444; }
+
+    /* Stat cards */
+    .stat-card {
+      background: #213349;
+      border: 1px solid rgba(201,168,76,0.1);
+      transition: all 0.3s ease;
+    }
+    .stat-card:hover { border-color: rgba(201,168,76,0.3); }
+
+    /* Gold line accent */
+    .gold-line {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(201,168,76,0.4), transparent);
+    }
+
+    /* Form inputs */
+    .form-input {
+      background: #1B2A3F;
+      border: 1px solid rgba(201,168,76,0.15);
+      color: #F5F0E8;
+      font-family: 'Jost', system-ui, sans-serif;
+    }
+    .form-input::placeholder { color: #4A5A6A; }
+    .form-input:focus {
+      outline: none;
+      border-color: #C9A84C;
+      box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+    }
+
+    /* Fade in animation */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.4s ease-out forwards; }
+    .fade-up-delay-1 { animation-delay: 0.05s; opacity: 0; }
+    .fade-up-delay-2 { animation-delay: 0.1s; opacity: 0; }
+    .fade-up-delay-3 { animation-delay: 0.15s; opacity: 0; }
+    .fade-up-delay-4 { animation-delay: 0.2s; opacity: 0; }
+  </style>
+</head>
+<body class="min-h-screen bg-navy-deep">
+
+  <!-- ══ PASSWORD GATE ══ -->
+  <div id="login-screen" class="min-h-screen flex items-center justify-center px-4" style="background: radial-gradient(ellipse at center, #1B2A3F 0%, #0F1C2B 70%);">
+    <div class="login-card bg-navy-card rounded-lg shadow-2xl p-8 md:p-10 w-full max-w-sm text-center border border-gold-dim">
+      <div class="inline-block p-2.5 border-2 border-gold rounded-lg mb-6" style="box-shadow: 0 0 20px rgba(201,168,76,0.15);">
+        <img src="../images/tjs-logo.jpg" alt="The Jewellery Studio" class="w-16 h-16 rounded object-cover">
+      </div>
+      <h1 class="font-display text-2xl font-semibold text-warm mb-1">The Jewellery Studio</h1>
+      <p class="text-sm text-muted mb-8 tracking-wide">Internal Dashboard</p>
+      <form onsubmit="return handleLogin(event)">
+        <input
+          id="password-input"
+          type="password"
+          placeholder="Access code"
+          autocomplete="off"
+          class="form-input w-full px-4 py-3 rounded-lg text-center text-lg tracking-widest mb-4"
+        >
+        <button type="submit" class="w-full py-3 bg-gold text-navy-darkest rounded-lg font-medium hover:bg-gold-muted transition-colors tracking-wide text-sm uppercase">
+          Enter
+        </button>
+      </form>
+      <p id="login-error" class="text-red-400 text-sm mt-4 hidden">Incorrect access code</p>
+      <a href="../" class="inline-flex items-center gap-1 text-sm text-dim hover:text-gold transition-colors mt-6">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to site
+      </a>
+    </div>
+  </div>
+
+  <!-- ══ ADMIN DASHBOARD (hidden until logged in) ══ -->
+  <div id="admin-dashboard" class="hidden">
+
+    <!-- Top Bar -->
+    <header class="bg-navy border-b border-gold-dim sticky top-0 z-50" style="box-shadow: 0 2px 20px rgba(0,0,0,0.3);">
+      <div class="max-w-6xl mx-auto px-4 md:px-8 flex items-center justify-between h-16">
+        <div class="flex items-center gap-3">
+          <div class="p-1 border border-gold-dim rounded">
+            <img src="../images/tjs-logo.jpg" alt="TJS" class="w-7 h-7 rounded object-cover">
+          </div>
+          <div>
+            <span class="font-display text-warm text-lg font-semibold">Dashboard</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <a href="../" class="text-sm text-muted hover:text-gold transition-colors hidden md:inline-flex items-center gap-1">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            View Site
+          </a>
+          <button onclick="openAddModal()" class="flex items-center gap-2 px-4 py-2 bg-gold text-navy-darkest rounded-lg text-sm font-medium hover:bg-gold-muted transition-colors">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span class="hidden sm:inline">Add Product</span>
+          </button>
+          <button onclick="logout()" class="p-2 text-dim hover:text-gold transition-colors" title="Log out">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Stats Bar -->
+    <div class="max-w-6xl mx-auto px-4 md:px-8 py-6">
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
+        <div class="stat-card rounded-lg p-4">
+          <p class="text-[11px] text-gold uppercase tracking-widest font-light">Products</p>
+          <p id="stat-total" class="text-2xl font-display font-semibold text-warm mt-1">0</p>
+        </div>
+        <div class="stat-card rounded-lg p-4">
+          <p class="text-[11px] text-gold uppercase tracking-widest font-light">Active</p>
+          <p id="stat-active" class="text-2xl font-display font-semibold text-green-400 mt-1">0</p>
+        </div>
+        <div class="stat-card rounded-lg p-4">
+          <p class="text-[11px] text-gold uppercase tracking-widest font-light">Stock Value</p>
+          <p id="stat-stock-value" class="text-2xl font-display font-semibold text-warm mt-1">&pound;0</p>
+        </div>
+        <div class="stat-card rounded-lg p-4">
+          <p class="text-[11px] text-gold uppercase tracking-widest font-light">Listing Value</p>
+          <p id="stat-listing-value" class="text-2xl font-display font-semibold text-warm mt-1">&pound;0</p>
+        </div>
+        <div class="stat-card rounded-lg p-4 col-span-2 md:col-span-1" style="border-color: rgba(34,197,94,0.2); background: linear-gradient(135deg, #213349 0%, rgba(34,197,94,0.05) 100%);">
+          <p class="text-[11px] text-green-400 uppercase tracking-widest font-light">Total Profit</p>
+          <p id="stat-total-profit" class="text-2xl font-display font-semibold text-green-400 mt-1">&pound;0</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div class="max-w-6xl mx-auto px-4 md:px-8"><div class="gold-line"></div></div>
+
+    <!-- Filter Tabs -->
+    <div class="max-w-6xl mx-auto px-4 md:px-8 my-5">
+      <div class="flex gap-2 overflow-x-auto pb-2">
+        <button onclick="filterCategory('all')" class="filter-btn active px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all" data-cat="all">All Products</button>
+        <button onclick="filterCategory('watches')" class="filter-btn px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all" data-cat="watches">Watches</button>
+        <button onclick="filterCategory('engagement')" class="filter-btn px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all" data-cat="engagement">Engagement</button>
+        <button onclick="filterCategory('gold')" class="filter-btn px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all" data-cat="gold">Gold</button>
+        <button onclick="filterCategory('necklaces')" class="filter-btn px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all" data-cat="necklaces">Necklaces</button>
+        <button onclick="filterCategory('diamonds')" class="filter-btn px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all" data-cat="diamonds">Diamonds</button>
+        <button onclick="filterCategory('preowned')" class="filter-btn px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all" data-cat="preowned">Pre-owned</button>
+      </div>
+    </div>
+
+    <!-- Product Grid -->
+    <div class="max-w-6xl mx-auto px-4 md:px-8 pb-20">
+      <div id="product-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+        <!-- Products loaded dynamically -->
+      </div>
+      <div id="empty-state" class="hidden text-center py-20">
+        <div class="w-16 h-16 bg-navy-card rounded-lg flex items-center justify-center mx-auto mb-4 border border-gold-dim">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="1.5" opacity="0.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+        </div>
+        <p class="font-display text-xl text-warm">No products yet</p>
+        <p class="text-muted text-sm mt-2">Tap "Add Product" to list your first piece</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ ADD/EDIT PRODUCT MODAL ══ -->
+  <div id="product-modal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeModal()"></div>
+    <div class="absolute inset-x-0 bottom-0 md:inset-0 md:flex md:items-center md:justify-center">
+      <div class="relative bg-navy rounded-t-2xl md:rounded-lg w-full md:max-w-lg max-h-[90vh] overflow-y-auto border border-gold-dim" style="box-shadow: 0 0 60px rgba(0,0,0,0.5);">
+        <div class="sticky top-0 bg-navy rounded-t-2xl md:rounded-t-lg border-b border-gold-dim px-6 py-4 flex items-center justify-between z-10">
+          <h2 id="modal-title" class="font-display text-xl font-semibold text-warm">Add Product</h2>
+          <button onclick="closeModal()" class="p-1 text-dim hover:text-warm transition-colors">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <form id="product-form" onsubmit="return handleProductSubmit(event)" class="p-6 space-y-5">
+          <input type="hidden" id="edit-id" value="">
+
+          <!-- Photo Upload -->
+          <div>
+            <label class="block text-[11px] text-gold uppercase tracking-widest mb-2 font-light">Photo</label>
+            <div id="upload-area" onclick="document.getElementById('photo-input').click()" class="border border-dashed border-gold-dim rounded-lg p-6 text-center cursor-pointer hover:border-gold transition-colors bg-navy-deep/50">
+              <div id="upload-placeholder">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="1" class="mx-auto mb-2" opacity="0.4"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+                <p class="text-sm text-dim">Tap to upload photo</p>
+              </div>
+              <img id="photo-preview" class="hidden max-h-48 mx-auto rounded-lg object-contain" alt="Preview">
+            </div>
+            <input type="file" id="photo-input" accept="image/*" class="hidden" onchange="previewPhoto(this)">
+          </div>
+
+          <!-- Name -->
+          <div>
+            <label class="block text-[11px] text-gold uppercase tracking-widest mb-2 font-light">Product Name</label>
+            <input type="text" id="product-name" required placeholder="e.g. Rolex Datejust 41mm" class="form-input w-full px-4 py-3 rounded-lg">
+          </div>
+
+          <!-- Category -->
+          <div>
+            <label class="block text-[11px] text-gold uppercase tracking-widest mb-2 font-light">Category</label>
+            <select id="product-category" required class="form-input w-full px-4 py-3 rounded-lg appearance-none" style="background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%239BA8B5%22 stroke-width=%222%22%3E%3Cpolyline points=%226 9 12 15 18 9%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 12px center;">
+              <option value="">Select category...</option>
+              <option value="watches">Watches</option>
+              <option value="engagement">Engagement</option>
+              <option value="gold">Gold</option>
+              <option value="necklaces">Necklaces</option>
+              <option value="diamonds">Diamonds</option>
+              <option value="preowned">Pre-owned</option>
+            </select>
+          </div>
+
+          <!-- Pricing -->
+          <div class="space-y-3">
+            <label class="block text-[11px] text-gold uppercase tracking-widest font-light">Pricing</label>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[10px] text-muted uppercase tracking-wide mb-1">Cost Price</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-dim text-sm">&pound;</span>
+                  <input type="number" id="product-cost-price" step="0.01" min="0" placeholder="0.00" oninput="calcProfit()" class="form-input w-full pl-7 pr-4 py-3 rounded-lg text-sm">
+                </div>
+              </div>
+              <div>
+                <label class="block text-[10px] text-muted uppercase tracking-wide mb-1">Selling Price</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-dim text-sm">&pound;</span>
+                  <input type="number" id="product-selling-price" step="0.01" min="0" placeholder="0.00" oninput="calcProfit()" class="form-input w-full pl-7 pr-4 py-3 rounded-lg text-sm">
+                </div>
+              </div>
+            </div>
+            <div id="profit-display" class="hidden rounded-lg px-4 py-2.5 flex items-center justify-between" style="background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.15);">
+              <span class="text-xs text-green-400 font-medium">Profit</span>
+              <div class="flex items-center gap-2">
+                <span id="profit-amount" class="text-sm font-semibold text-green-400">&pound;0</span>
+                <span id="profit-margin" class="text-[10px] text-green-400 px-1.5 py-0.5 rounded-full" style="background: rgba(34,197,94,0.15);">0%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div>
+            <label class="block text-[11px] text-gold uppercase tracking-widest mb-2 font-light">Description <span class="text-dim font-normal normal-case tracking-normal">(optional)</span></label>
+            <textarea id="product-description" rows="3" placeholder="Brief description of the piece..." class="form-input w-full px-4 py-3 rounded-lg resize-none"></textarea>
+          </div>
+
+          <!-- Submit -->
+          <button type="submit" id="submit-btn" class="w-full py-3.5 bg-gold text-navy-darkest rounded-lg font-medium hover:bg-gold-muted transition-colors uppercase text-sm tracking-wide">
+            Publish Product
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ DELETE CONFIRMATION ══ -->
+  <div id="delete-modal" class="fixed inset-0 z-50 items-center justify-center" style="display:none;">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeDeleteModal()"></div>
+    <div class="relative bg-navy rounded-lg p-6 w-full max-w-sm mx-4 text-center border border-gold-dim" style="box-shadow: 0 0 60px rgba(0,0,0,0.5);">
+      <div class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4" style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      </div>
+      <h3 class="font-display text-xl font-semibold text-warm mb-1">Delete Product</h3>
+      <p class="text-sm text-muted mb-6">Are you sure? This can't be undone.</p>
+      <div class="flex gap-3">
+        <button onclick="closeDeleteModal()" class="flex-1 py-2.5 border border-gold-dim rounded-lg text-sm font-medium text-muted hover:text-warm hover:border-gold transition-colors">Cancel</button>
+        <button onclick="confirmDelete()" class="flex-1 py-2.5 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition-colors">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ═══ CONFIG ═══
+    const API_BASE = 'https://whnwyibqnwemvpxqavvl.supabase.co/functions/v1/admin';
+
+    let allProducts = [];
+    let currentFilter = 'all';
+    let deleteTargetId = null;
+    let editingProduct = null;
+
+    // ═══ API HELPER ═══
+    function getToken() { return sessionStorage.getItem('tjs_token') || ''; }
+
+    async function api(path, options = {}) {
+      const res = await fetch(`${API_BASE}/${path}`, {
+        ...options,
+        headers: {
+          ...(options.headers || {}),
+          'Authorization': 'Bearer ' + getToken(),
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (res.status === 401) { logout(); return null; }
+        throw new Error(data.error || 'Request failed');
+      }
+      return data;
+    }
+
+    // ═══ AUTH ═══
+    async function handleLogin(e) {
+      e.preventDefault();
+      const pw = document.getElementById('password-input').value;
+      const errorEl = document.getElementById('login-error');
+      errorEl.classList.add('hidden');
+
+      try {
+        const res = await fetch(`${API_BASE}/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pw }),
+        });
+        const data = await res.json();
+
+        if (res.ok && data.token) {
+          sessionStorage.setItem('tjs_token', data.token);
+          showDashboard();
+        } else {
+          errorEl.classList.remove('hidden');
+          document.getElementById('password-input').value = '';
+          document.getElementById('password-input').focus();
+        }
+      } catch (err) {
+        errorEl.textContent = 'Connection error. Try again.';
+        errorEl.classList.remove('hidden');
+      }
+      return false;
+    }
+
+    function logout() {
+      sessionStorage.removeItem('tjs_token');
+      location.reload();
+    }
+
+    function showDashboard() {
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('admin-dashboard').classList.remove('hidden');
+      loadProducts();
+    }
+
+    if (sessionStorage.getItem('tjs_token')) {
+      showDashboard();
+    }
+
+    // ═══ PRODUCTS ═══
+    async function loadProducts() {
+      const data = await api('products');
+      if (!data) return;
+
+      allProducts = data || [];
+      updateStats();
+      renderProducts();
+    }
+
+    function updateStats() {
+      document.getElementById('stat-total').textContent = allProducts.length;
+      document.getElementById('stat-active').textContent = allProducts.filter(p => p.active).length;
+
+      const stockValue = allProducts.reduce((sum, p) => sum + (Number(p.cost_price) || 0), 0);
+      const listingValue = allProducts.reduce((sum, p) => sum + (Number(p.selling_price) || 0), 0);
+      const totalProfit = listingValue - stockValue;
+
+      document.getElementById('stat-stock-value').textContent = '\u00A3' + stockValue.toLocaleString();
+      document.getElementById('stat-listing-value').textContent = '\u00A3' + listingValue.toLocaleString();
+      document.getElementById('stat-total-profit').textContent = '\u00A3' + totalProfit.toLocaleString();
+    }
+
+    function renderProducts() {
+      const grid = document.getElementById('product-grid');
+      const empty = document.getElementById('empty-state');
+
+      const filtered = currentFilter === 'all'
+        ? allProducts
+        : allProducts.filter(p => p.category === currentFilter);
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+      }
+
+      empty.classList.add('hidden');
+      grid.innerHTML = filtered.map((p, idx) => `
+        <div class="product-card bg-navy-card rounded-lg overflow-hidden cursor-pointer fade-up" style="animation-delay: ${idx * 0.04}s; opacity: 0;" onclick="editProduct('${p.id}')">
+          <div class="aspect-square bg-navy-deep relative overflow-hidden">
+            ${p.image_url
+              ? `<img src="${p.image_url}" alt="${p.name}" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105">`
+              : `<div class="w-full h-full flex items-center justify-center"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#4A5A6A" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></div>`
+            }
+            <div class="absolute top-2 right-2">
+              <span class="status-dot ${p.active ? 'status-active' : 'status-inactive'}"></span>
+            </div>
+          </div>
+          <div class="p-3">
+            <p class="text-sm font-medium text-warm truncate">${p.name}</p>
+            <div class="flex items-center justify-between mt-1">
+              <p class="text-[11px] text-dim capitalize tracking-wide">${p.category === 'preowned' ? 'Pre-owned' : p.category}</p>
+              ${p.selling_price ? `<p class="text-sm font-semibold text-gold">&pound;${Number(p.selling_price).toLocaleString()}</p>` : '<p class="text-[11px] text-dim">No price</p>'}
+            </div>
+            ${(p.selling_price && p.cost_price) ? `<div class="flex items-center justify-between mt-1.5 pt-1.5 border-t border-gold-dim">
+              <span class="text-[10px] text-dim">Cost &pound;${Number(p.cost_price).toLocaleString()}</span>
+              <span class="text-[10px] font-medium ${(Number(p.selling_price) - Number(p.cost_price)) >= 0 ? 'text-green-400' : 'text-red-400'}">&pound;${(Number(p.selling_price) - Number(p.cost_price)).toLocaleString()} profit</span>
+            </div>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterCategory(cat) {
+      currentFilter = cat;
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.cat === cat);
+      });
+      renderProducts();
+    }
+
+    // ═══ PROFIT CALC ═══
+    function calcProfit() {
+      const cost = parseFloat(document.getElementById('product-cost-price').value) || 0;
+      const sell = parseFloat(document.getElementById('product-selling-price').value) || 0;
+      const display = document.getElementById('profit-display');
+
+      if (cost > 0 && sell > 0) {
+        const profit = sell - cost;
+        const margin = ((profit / sell) * 100).toFixed(0);
+        document.getElementById('profit-amount').textContent = (profit >= 0 ? '\u00A3' : '-\u00A3') + Math.abs(profit).toLocaleString();
+        document.getElementById('profit-margin').textContent = margin + '%';
+
+        if (profit < 0) {
+          display.style.background = 'rgba(239,68,68,0.08)';
+          display.style.borderColor = 'rgba(239,68,68,0.15)';
+          document.getElementById('profit-amount').className = 'text-sm font-semibold text-red-400';
+          document.getElementById('profit-margin').className = 'text-[10px] text-red-400 px-1.5 py-0.5 rounded-full';
+          document.getElementById('profit-margin').style.background = 'rgba(239,68,68,0.15)';
+          display.querySelector('.text-xs').className = 'text-xs text-red-400 font-medium';
+        } else {
+          display.style.background = 'rgba(34,197,94,0.08)';
+          display.style.borderColor = 'rgba(34,197,94,0.15)';
+          document.getElementById('profit-amount').className = 'text-sm font-semibold text-green-400';
+          document.getElementById('profit-margin').className = 'text-[10px] text-green-400 px-1.5 py-0.5 rounded-full';
+          document.getElementById('profit-margin').style.background = 'rgba(34,197,94,0.15)';
+          display.querySelector('.text-xs').className = 'text-xs text-green-400 font-medium';
+        }
+        display.classList.remove('hidden');
+      } else {
+        display.classList.add('hidden');
+      }
+    }
+
+    // ═══ MODAL ═══
+    function openAddModal() {
+      editingProduct = null;
+      document.getElementById('modal-title').textContent = 'Add Product';
+      document.getElementById('submit-btn').textContent = 'Publish Product';
+      document.getElementById('product-form').reset();
+      document.getElementById('edit-id').value = '';
+      document.getElementById('photo-preview').classList.add('hidden');
+      document.getElementById('upload-placeholder').classList.remove('hidden');
+      document.getElementById('profit-display').classList.add('hidden');
+      document.getElementById('product-modal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function editProduct(id) {
+      const p = allProducts.find(x => x.id === id);
+      if (!p) return;
+      editingProduct = p;
+
+      document.getElementById('modal-title').textContent = 'Edit Product';
+      document.getElementById('submit-btn').innerHTML = `
+        <div class="flex items-center justify-center gap-3">
+          <span>Save Changes</span>
+          <span class="opacity-30">|</span>
+          <span onclick="event.stopPropagation(); event.preventDefault(); openDeleteModal('${id}')" class="text-red-300 hover:text-red-200 text-sm cursor-pointer">Delete</span>
+        </div>
+      `;
+      document.getElementById('edit-id').value = p.id;
+      document.getElementById('product-name').value = p.name;
+      document.getElementById('product-category').value = p.category;
+      document.getElementById('product-cost-price').value = p.cost_price || '';
+      document.getElementById('product-selling-price').value = p.selling_price || '';
+      document.getElementById('product-description').value = p.description || '';
+      calcProfit();
+
+      if (p.image_url) {
+        document.getElementById('photo-preview').src = p.image_url;
+        document.getElementById('photo-preview').classList.remove('hidden');
+        document.getElementById('upload-placeholder').classList.add('hidden');
+      } else {
+        document.getElementById('photo-preview').classList.add('hidden');
+        document.getElementById('upload-placeholder').classList.remove('hidden');
+      }
+
+      document.getElementById('product-modal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      document.getElementById('product-modal').classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    function previewPhoto(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          document.getElementById('photo-preview').src = e.target.result;
+          document.getElementById('photo-preview').classList.remove('hidden');
+          document.getElementById('upload-placeholder').classList.add('hidden');
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    // ═══ SUBMIT ═══
+    async function handleProductSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submit-btn');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<div class="flex items-center justify-center gap-2"><div class="w-4 h-4 border-2 border-navy-darkest/30 border-t-navy-darkest rounded-full animate-spin"></div> Saving...</div>';
+      btn.disabled = true;
+
+      try {
+        const name = document.getElementById('product-name').value;
+        const category = document.getElementById('product-category').value;
+        const cost_price = document.getElementById('product-cost-price').value || null;
+        const selling_price = document.getElementById('product-selling-price').value || null;
+        const description = document.getElementById('product-description').value || null;
+        const editId = document.getElementById('edit-id').value;
+        const photoFile = document.getElementById('photo-input').files[0];
+
+        let image_url = editingProduct?.image_url || null;
+
+        if (photoFile) {
+          const formData = new FormData();
+          formData.append('file', photoFile);
+
+          const uploadRes = await fetch(`${API_BASE}/upload`, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + getToken() },
+            body: formData,
+          });
+          const uploadData = await uploadRes.json();
+          if (!uploadRes.ok) throw new Error(uploadData.error || 'Upload failed');
+          image_url = uploadData.url;
+        }
+
+        const productData = { name, category, cost_price, selling_price, description, image_url, active: true };
+
+        if (editId) {
+          await api('products', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: editId, ...productData }),
+          });
+        } else {
+          await api('products', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(productData),
+          });
+        }
+
+        closeModal();
+        await loadProducts();
+
+      } catch (err) {
+        console.error('Error saving product:', err);
+        alert('Something went wrong. Please try again.');
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+
+      return false;
+    }
+
+    // ═══ DELETE ═══
+    function openDeleteModal(id) {
+      deleteTargetId = id;
+      document.getElementById('delete-modal').style.display = 'flex';
+    }
+
+    function closeDeleteModal() {
+      deleteTargetId = null;
+      document.getElementById('delete-modal').style.display = 'none';
+    }
+
+    async function confirmDelete() {
+      if (!deleteTargetId) return;
+
+      try {
+        await api('products?id=' + deleteTargetId, { method: 'DELETE' });
+        closeDeleteModal();
+        closeModal();
+        await loadProducts();
+      } catch (err) {
+        console.error('Error deleting:', err);
+        alert('Could not delete. Try again.');
+      }
+    }
+  </script>
+</body>
+</html>

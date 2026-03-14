@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Jewellery Studio | Fine Jewellery & Pawnbrokers | Gibraltar</title>
+  <meta name="description" content="Bespoke jewellery, pawnbroking, repairs and valuations at 152 Main Street, Gibraltar. Trusted by the community, run by Michael & Stephanie Scott.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            gold: { 50:'#FDF9F0',100:'#F5EAD4',200:'#E8D5B0',300:'#D4BA8A',400:'#C9A96E',500:'#B89A5E',600:'#A68B55',700:'#8A7345',800:'#6E5C37',900:'#52452A' },
+            charcoal: { DEFAULT:'#1A1A1A', light:'#2A2A2A', softer:'#3A3A3A' },
+            navy: { DEFAULT:'#2C4268', light:'#3A5580', dark:'#1E3050' },
+            warm: { white:'#FAFAF8', cream:'#F5F0E8', sand:'#EDE6D8' },
+          },
+          fontFamily: { display:['"Cormorant Garamond"','Georgia','serif'], body:['"Jost"','system-ui','sans-serif'] },
+          letterSpacing: { luxe:'0.25em', elegant:'0.14em', wide:'0.06em' },
+        },
+      },
+    }
+  </script>
+  <script type="importmap">
+  { "imports": { "three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/" } }
+  </script>
+  <style>
+    body { font-family:'Jost',sans-serif; color:#1A1A1A; overflow-x:hidden; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+    body { animation: pageReveal 1s ease-out forwards; }
+    @keyframes pageReveal { from{opacity:0} to{opacity:1} }
+
+    /* ── 3D Canvas ── */
+    #hero-canvas { cursor:grab; touch-action:none; }
+    #hero-canvas:active { cursor:grabbing; }
+    .interact-hint { transition:opacity 0.8s ease; }
+
+    /* ── Animations ── */
+    .gold-shimmer { animation:shimmer 5s ease-in-out infinite; }
+    @keyframes shimmer { 0%,100%{opacity:0.4} 50%{opacity:1} }
+    @keyframes gentleBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(6px)} }
+    .scroll-indicator { animation:gentleBounce 2.5s ease-in-out infinite; }
+    @keyframes floatIn { from{opacity:0;transform:translateY(40px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes lineGrow { from{width:0} to{width:60px} }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ── Reveals ── */
+    .reveal { opacity:0; transform:translateY(32px); transition:opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1); }
+    .reveal.visible { opacity:1; transform:translateY(0); }
+    .reveal-delay-1{transition-delay:.12s} .reveal-delay-2{transition-delay:.24s} .reveal-delay-3{transition-delay:.32s}
+    .reveal-delay-4{transition-delay:.42s} .reveal-delay-5{transition-delay:.52s}
+
+    /* ── Decorative ── */
+    .gold-divider { width:50px; height:1px; background:linear-gradient(90deg,transparent,#C9A96E,transparent); margin:0 auto; }
+    .gold-divider-left { width:50px; height:1px; background:linear-gradient(90deg,#C9A96E,transparent); }
+    .diamond-dot { display:inline-block; width:5px; height:5px; background:#C9A96E; transform:rotate(45deg); }
+
+    /* ── Nav ── */
+    .nav-scrolled { background:rgba(255,255,255,0.96)!important; backdrop-filter:blur(20px) saturate(1.2); box-shadow:0 1px 0 rgba(201,169,110,0.12); }
+
+    /* ── Buttons ── */
+    .btn-gold { position:relative; overflow:hidden; background:#C9A96E; color:#fff; transition: all 0.4s cubic-bezier(0.16,1,0.3,1); }
+    .btn-gold:hover { background:#B89A5E; transform:translateY(-1px); box-shadow: 0 8px 30px rgba(201,169,110,0.25); }
+    .btn-gold::after { content:''; position:absolute; top:50%; left:50%; width:0; height:0; background:rgba(255,255,255,0.1); border-radius:50%; transform:translate(-50%,-50%); transition:width 0.6s,height 0.6s; pointer-events:none; }
+    .btn-gold:hover::after { width:400px; height:400px; }
+
+    .btn-outline { border:1px solid #C9A96E; color:#C9A96E; transition: all 0.4s cubic-bezier(0.16,1,0.3,1); }
+    .btn-outline:hover { background:#C9A96E; color:#fff; transform:translateY(-1px); }
+
+    /* ── Service cards ── */
+    .service-card { position:relative; overflow:hidden; background:#fff; transition:all 0.5s cubic-bezier(0.16,1,0.3,1); }
+    .service-card:hover { transform:translateY(-4px); box-shadow: 0 20px 60px rgba(0,0,0,0.08), 0 4px 20px rgba(201,169,110,0.1); }
+    .service-card .card-img { transition: transform 0.8s cubic-bezier(0.16,1,0.3,1); }
+    .service-card:hover .card-img { transform: scale(1.05); }
+
+    /* ── Parallax showroom ── */
+    .showroom-hero { background-attachment: fixed; background-size: cover; background-position: center; }
+    @supports (-webkit-touch-callout: none) { .showroom-hero { background-attachment: scroll; } }
+
+    /* ── Map ── */
+    .map-container iframe { filter:grayscale(0.3) contrast(1.05) brightness(1.02); transition:filter 0.5s; }
+    .map-container:hover iframe { filter:grayscale(0) contrast(1) brightness(1); }
+
+    /* ── Shop filters ── */
+    .shop-filter { background:transparent; color:rgba(26,26,26,0.4); border-color:rgba(201,169,110,0.2); }
+    .shop-filter:hover { border-color:#C9A96E; color:#C9A96E; }
+    .shop-filter.active { background:#C9A96E; color:#fff; border-color:#C9A96E; }
+
+    /* ── Shop product cards ── */
+    .shop-card { background:#fff; overflow:hidden; transition:all 0.5s cubic-bezier(0.16,1,0.3,1); cursor:pointer; }
+    .shop-card:hover { transform:translateY(-4px); box-shadow:0 16px 50px rgba(0,0,0,0.06), 0 2px 12px rgba(201,169,110,0.08); }
+    .shop-card img { transition:transform 1s cubic-bezier(0.16,1,0.3,1); }
+    .shop-card:hover img { transform:scale(1.06); }
+
+    /* ── Selection ── */
+    ::selection { background:#E8D5B0; color:#1A1A1A; }
+
+    /* ── Smooth section divider ── */
+    .section-divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(201,169,110,0.2), transparent); }
+
+    /* ── Logo in nav ── */
+    .nav-logo svg { transition: opacity 0.3s ease; }
+    .nav-logo:hover svg { opacity: 0.7; }
+
+    /* ── Brand Marquee ── */
+    .marquee-track {
+      display: flex;
+      width: max-content;
+      animation: marqueeScroll 25s linear infinite;
+    }
+    .marquee-track:hover { animation-play-state: paused; }
+    @keyframes marqueeScroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .marquee-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 2.5rem;
+      padding: 0 2.5rem;
+      white-space: nowrap;
+    }
+    .marquee-dot {
+      width: 4px; height: 4px;
+      background: #C9A96E;
+      border-radius: 50%;
+      opacity: 0.4;
+      flex-shrink: 0;
+    }
+    .brand-logo {
+      height: 32px;
+      width: auto;
+      max-width: 160px;
+      object-fit: contain;
+      filter: invert(1) hue-rotate(180deg);
+      opacity: 0.8;
+      transition: opacity 0.3s ease;
+    }
+    .brand-logo:hover {
+      opacity: 1;
+    }
+    .brand-logo-lg {
+      height: 46px;
+    }
+    .brand-logo-xl {
+      height: 80px;
+      max-width: 200px;
+    }
+    @media (min-width: 768px) {
+      .brand-logo { height: 40px; }
+      .brand-logo-lg { height: 58px; }
+      .brand-logo-xl { height: 100px; }
+    }
+    .footer-logo {
+      border-radius: 6px;
+      opacity: 0.85;
+    }
+  </style>
+</head>
+
+<body class="bg-white">
+
+  <!-- ══ NAV ══ -->
+  <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-500" style="background:transparent;">
+    <div class="max-w-7xl mx-auto px-5 md:px-10">
+      <div class="flex items-center justify-between h-18 md:h-22" style="height:72px;">
+        <!-- Logo -->
+        <a href="#hero" class="nav-logo flex items-center gap-3">
+          <img src="images/tjs-logo.jpg" alt="The Jewellery Studio" class="h-11 w-auto rounded-sm">
+        </a>
+
+        <!-- Desktop nav -->
+        <div class="hidden md:flex items-center gap-11">
+          <a href="#services" class="font-body text-[11px] tracking-elegant uppercase text-charcoal/60 hover:text-gold-400 transition-colors duration-300 py-1">Services</a>
+          <a href="#shop" class="font-body text-[11px] tracking-elegant uppercase text-charcoal/60 hover:text-gold-400 transition-colors duration-300 py-1">Shop</a>
+          <a href="#about" class="font-body text-[11px] tracking-elegant uppercase text-charcoal/60 hover:text-gold-400 transition-colors duration-300 py-1">Our Story</a>
+          <a href="#contact" class="font-body text-[11px] tracking-elegant uppercase text-charcoal/60 hover:text-gold-400 transition-colors duration-300 py-1">Contact</a>
+          <a href="https://wa.me/35054013690" target="_blank" rel="noopener"
+             class="btn-gold font-body text-[11px] tracking-elegant uppercase px-6 py-2.5 inline-flex items-center gap-2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="opacity-80"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            WhatsApp
+          </a>
+        </div>
+
+        <!-- Mobile menu toggle -->
+        <button id="menu-toggle" class="md:hidden flex flex-col gap-1.5 p-2" aria-label="Open menu">
+          <span class="block w-5 h-px bg-charcoal transition-all duration-300 origin-center" id="bar1"></span>
+          <span class="block w-5 h-px bg-charcoal transition-all duration-300 origin-center" id="bar2"></span>
+        </button>
+      </div>
+    </div>
+    <!-- Mobile menu -->
+    <div id="mobile-menu" class="md:hidden overflow-hidden transition-all duration-500 max-h-0 bg-white/98 backdrop-blur-xl">
+      <div class="px-6 py-8 flex flex-col gap-6 border-t border-gold-100/50">
+        <a href="#services" class="font-body text-[11px] tracking-elegant uppercase text-charcoal/60" onclick="closeMobileMenu()">Services</a>
+        <a href="#shop" class="font-body text-[11px] tracking-elegant uppercase text-charcoal/60" onclick="closeMobileMenu()">Shop</a>
+        <a href="#about" class="font-body text-[11px] tracking-elegant uppercase text-charcoal/60" onclick="closeMobileMenu()">Our Story</a>
+        <a href="#contact" class="font-body text-[11px] tracking-elegant uppercase text-charcoal/60" onclick="closeMobileMenu()">Contact</a>
+        <a href="https://wa.me/35054013690" target="_blank" rel="noopener" class="btn-gold font-body text-[11px] tracking-elegant uppercase px-6 py-3 text-center inline-flex items-center justify-center gap-2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="opacity-80"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          WhatsApp Us
+        </a>
+      </div>
+    </div>
+  </nav>
+
+
+  <!-- ══ HERO — 3D DIAMOND ENGAGEMENT RING ══ -->
+  <section id="hero" class="relative min-h-screen flex flex-col items-center justify-center pt-24 bg-white px-6 overflow-hidden">
+    <!-- Subtle radial glow -->
+    <div class="absolute inset-0 pointer-events-none" style="background:radial-gradient(ellipse 60% 50% at center 45%, rgba(201,169,110,0.07) 0%, transparent 70%);"></div>
+
+    <!-- Title with decorative lines -->
+    <div class="relative z-10 text-center mb-4 md:mb-6" style="animation: fadeUp 1s ease-out 0.2s both;">
+      <div class="flex items-center justify-center gap-4 mb-6">
+        <div class="w-12 h-px bg-gold-400/40 gold-shimmer"></div>
+        <span class="diamond-dot" style="width:5px;height:5px;background:#C9A96E;transform:rotate(45deg);opacity:0.5;display:inline-block;"></span>
+        <div class="w-12 h-px bg-gold-400/40 gold-shimmer"></div>
+      </div>
+      <h1 class="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl tracking-luxe uppercase text-charcoal leading-tight font-semibold">The Jewellery<br>Studio</h1>
+    </div>
+
+    <!-- 3D Ring Canvas -->
+    <div id="hero-3d" class="relative w-[280px] h-[280px] sm:w-[340px] sm:h-[340px] md:w-[420px] md:h-[420px]">
+      <canvas id="hero-canvas" class="w-full h-full"></canvas>
+      <p id="interact-hint" class="interact-hint absolute -bottom-2 left-0 right-0 text-center font-body text-[10px] tracking-widest uppercase text-charcoal/20">drag to interact</p>
+    </div>
+
+    <!-- Tagline -->
+    <div class="relative z-10 text-center mt-4 md:mt-6" style="animation: fadeUp 1s ease-out 0.6s both;">
+      <p class="font-display text-sm md:text-base tracking-elegant text-gold-400 italic font-light">Fine Jewellery &amp; Pawnbrokers</p>
+      <p class="font-body text-[10px] tracking-luxe uppercase text-charcoal/30 mt-4">152 Main Street, Gibraltar</p>
+    </div>
+
+    <!-- Scroll indicator -->
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 scroll-indicator pointer-events-none">
+      <svg width="18" height="28" viewBox="0 0 18 28" fill="none" class="opacity-20">
+        <rect x="1" y="1" width="16" height="26" rx="8" stroke="#C9A96E" stroke-width="1"/>
+        <circle cx="9" cy="8" r="1.5" fill="#C9A96E"><animate attributeName="cy" values="8;16;8" dur="2.5s" repeatCount="indefinite"/></circle>
+      </svg>
+    </div>
+  </section>
+
+
+  <!-- ═══ VIDEO SHOWCASE ═══ -->
+  <section class="py-20 md:py-28 bg-white">
+    <div class="max-w-6xl mx-auto px-6 md:px-10">
+      <div class="text-center mb-12 md:mb-16 reveal">
+        <p class="font-body text-[10px] tracking-luxe uppercase text-gold-400 mb-5">From Our Collection</p>
+        <h2 class="font-display text-3xl md:text-5xl tracking-wide text-charcoal font-light">Crafted to Perfection</h2>
+        <div class="gold-divider mt-7"></div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-4 md:gap-5 reveal reveal-delay-1">
+        <div class="relative aspect-[9/16] overflow-hidden rounded-sm bg-charcoal/5">
+          <video src="images/video-rolex.mp4" autoplay muted loop playsinline class="w-full h-full object-cover"></video>
+        </div>
+        <div class="relative aspect-[9/16] overflow-hidden rounded-sm bg-charcoal/5">
+          <video src="images/video-ring.mp4" autoplay muted loop playsinline class="w-full h-full object-cover"></video>
+        </div>
+        <div class="relative aspect-[9/16] overflow-hidden rounded-sm bg-charcoal/5">
+          <video src="images/video-gem.mp4" autoplay muted loop playsinline class="w-full h-full object-cover"></video>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══ SERVICES ═══ -->
+  <section id="services" class="py-28 md:py-36 bg-white">
+    <div class="max-w-6xl mx-auto px-6 md:px-10">
+      <div class="text-center mb-20 md:mb-24 reveal">
+        <p class="font-body text-[10px] tracking-luxe uppercase text-gold-400 mb-5">What We Do</p>
+        <h2 class="font-display text-3xl md:text-5xl tracking-wide text-charcoal font-light">Our Services</h2>
+        <div class="gold-divider mt-7"></div>
+      </div>
+
+      <!-- Top row: 3 services -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-5 mb-6 md:mb-5">
+
+        <div class="service-card reveal reveal-delay-1 group">
+          <div class="aspect-[4/3] overflow-hidden">
+            <img src="images/luxury-watches.jpg" alt="Luxury watch collection" class="card-img w-full h-full object-cover" loading="lazy">
+          </div>
+          <div class="p-6 md:p-7">
+            <h3 class="font-display text-xl tracking-wide text-charcoal mb-3">Pawnbroking</h3>
+            <p class="font-body text-[13px] text-charcoal/50 leading-relaxed font-light">Confidential, fair valuations with immediate funds against your valuables. Trusted by the Gibraltar community.</p>
+          </div>
+        </div>
+
+        <div class="service-card reveal reveal-delay-2 group">
+          <div class="aspect-[4/3] overflow-hidden">
+            <img src="images/diamond-rings.jpg" alt="Diamond engagement rings" class="card-img w-full h-full object-cover" loading="lazy">
+          </div>
+          <div class="p-6 md:p-7">
+            <h3 class="font-display text-xl tracking-wide text-charcoal mb-3">Bespoke Jewellery</h3>
+            <p class="font-body text-[13px] text-charcoal/50 leading-relaxed font-light">Commission a one-of-a-kind piece, crafted to your exact vision and specifications. From concept to creation.</p>
+          </div>
+        </div>
+
+        <div class="service-card reveal reveal-delay-3 group">
+          <div class="aspect-[4/3] overflow-hidden">
+            <img src="images/gemstone-rings.jpg" alt="Colourful gemstone ring collection" class="card-img w-full h-full object-cover" loading="lazy">
+          </div>
+          <div class="p-6 md:p-7">
+            <h3 class="font-display text-xl tracking-wide text-charcoal mb-3">Valuations</h3>
+            <p class="font-body text-[13px] text-charcoal/50 leading-relaxed font-light">Professional appraisals for insurance, probate, or personal knowledge. Detailed and transparent.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom row: 2 centred -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-5 max-w-4xl mx-auto">
+
+        <div class="service-card reveal reveal-delay-4 group">
+          <div class="aspect-[4/3] overflow-hidden">
+            <img src="images/cartier-collection.jpg" alt="Pre-owned Cartier jewellery" class="card-img w-full h-full object-cover" loading="lazy">
+          </div>
+          <div class="p-6 md:p-7">
+            <h3 class="font-display text-xl tracking-wide text-charcoal mb-3">Pre-owned &amp; Antique</h3>
+            <p class="font-body text-[13px] text-charcoal/50 leading-relaxed font-light">Curated designer and antique pieces. Cartier, Tiffany, Omega, and beyond. Each with its own story.</p>
+          </div>
+        </div>
+
+        <div class="service-card reveal reveal-delay-5 group">
+          <div class="aspect-[4/3] overflow-hidden">
+            <img src="images/repairs.png" alt="Michael repairing jewellery at The Jewellery Studio workbench" class="card-img w-full h-full object-cover" loading="lazy">
+          </div>
+          <div class="p-6 md:p-7">
+            <h3 class="font-display text-xl tracking-wide text-charcoal mb-3">Repairs &amp; Restoration</h3>
+            <p class="font-body text-[13px] text-charcoal/50 leading-relaxed font-light">Expert restoration to bring your cherished pieces back to their original beauty. Handled with care.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══ STEP INSIDE — FULL-WIDTH SHOP INTERIOR ══ -->
+  <section class="relative h-[55vh] md:h-[75vh] overflow-hidden">
+    <img src="images/shop-interior.jpg" alt="Inside The Jewellery Studio - teal walls, antique cabinets, herringbone floors" class="w-full h-full object-cover" loading="lazy">
+    <div class="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-black/5"></div>
+    <div class="absolute inset-0 flex items-end justify-center pb-14 md:pb-20">
+      <div class="text-center reveal">
+        <p class="font-body text-[9px] md:text-[10px] tracking-luxe uppercase text-white/50 mb-3">Welcome to</p>
+        <h2 class="font-display text-3xl md:text-5xl lg:text-6xl tracking-wide text-white font-light">The Showroom</h2>
+        <div class="w-12 h-px bg-gold-400/50 mx-auto mt-6"></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══ BRAND MARQUEE ═══ -->
+  <section class="py-8 md:py-10 overflow-hidden" style="background:#2C4268;">
+    <p class="font-body text-[9px] tracking-luxe uppercase text-white/30 text-center mb-4">Featuring pieces from</p>
+    <div class="relative">
+      <!-- Fade edges -->
+      <div class="absolute left-0 top-0 bottom-0 w-20 md:w-32 z-10 pointer-events-none" style="background:linear-gradient(to right,#2C4268,transparent)"></div>
+      <div class="absolute right-0 top-0 bottom-0 w-20 md:w-32 z-10 pointer-events-none" style="background:linear-gradient(to left,#2C4268,transparent)"></div>
+      <!-- Scrolling track with brand logos + signature colours -->
+      <div class="marquee-track">
+        <div class="marquee-item">
+          <span class="inline-flex items-center"><img src="images/brands/cartier.png" alt="Cartier" class="brand-logo"></span>
+          <span class="marquee-dot"></span>
+          <span class="inline-flex items-center"><img src="images/brands/tiffany.png" alt="Tiffany & Co." class="brand-logo brand-logo-lg"></span>
+          <span class="marquee-dot"></span>
+          <span class="inline-flex items-center"><img src="images/brands/omega.png" alt="Omega" class="brand-logo"></span>
+          <span class="marquee-dot"></span>
+          <span class="inline-flex items-center"><img src="images/brands/rolex.png" alt="Rolex" class="brand-logo"></span>
+          <span class="marquee-dot"></span>
+          <span class="inline-flex items-center"><img src="images/brands/tissot.png" alt="Tissot" class="brand-logo brand-logo-lg"></span>
+          <span class="marquee-dot"></span>
+          <span class="inline-flex items-center"><img src="images/brands/pandora.png" alt="Pandora" class="brand-logo"></span>
+          <span class="marquee-dot"></span>
+          <span class="inline-flex items-center"><img src="images/brands/david-yurman.png" alt="David Yurman" class="brand-logo brand-logo-xl"></span>
+          <span class="marquee-dot"></span>
+          <span class="inline-flex items-center"><img src="images/brands/tag-heuer.png" alt="Tag Heuer" class="brand-logo brand-logo-lg"></span>
+          <span class="marquee-dot"></span>
+        </div>
+        <div class="marquee-item" aria-hidden="true">
+          <span class="inline-flex items-center"><img src="images/brands/cartier.png" alt="Cartier" class="brand-logo"></span>
+          <span class="marquee-dot"></span>
+          <span class="inline-flex items-center"><img src="images/brands/tiffany.png" alt="Tiffany & Co." class="brand-logo brand-logo-lg"></span>
+          <span class="marquee-dot"></span>
+          <span class="inline-flex items-center"><img src="images/brands/omega.png" alt="Omega" class="brand-logo"></span>
+          <span class="marquee-dot"></span>
+          <span class="inline-flex items-center"><img src="images/brands/rolex.png" alt="Rolex" class="brand-logo"></span>
+          <span class="marquee-dot"></span>
+          <span class="inline-flex items-center"><img src="images/brands/tissot.png" alt="Tissot" class="brand-logo brand-logo-lg"></span>
+          <span class="marquee-dot"></span>
+          <span class="inline-flex items-center"><img src="images/brands/pandora.png" alt="Pandora" class="brand-logo"></span>
+          <span class="marquee-dot"></span>
+          <span class="inline-flex items-center"><img src="images/brands/david-yurman.png" alt="David Yurman" class="brand-logo brand-logo-xl"></span>
+          <span class="marquee-dot"></span>
+          <span class="inline-flex items-center"><img src="images/brands/tag-heuer.png" alt="Tag Heuer" class="brand-logo brand-logo-lg"></span>
+          <span class="marquee-dot"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══ SHOP BY CATEGORY ═══ -->
+  <section class="py-24 md:py-32 bg-white">
+    <div class="max-w-6xl mx-auto px-6 md:px-10">
+      <div class="text-center mb-16 md:mb-20 reveal">
+        <p class="font-body text-[10px] tracking-luxe uppercase text-gold-400 mb-5">Explore</p>
+        <h2 class="font-display text-3xl md:text-5xl tracking-wide text-charcoal font-light">Shop by Category</h2>
+        <div class="gold-divider mt-7"></div>
+      </div>
+
+      <!-- Category circles — 3 per row on mobile, 6 on desktop -->
+      <div class="grid grid-cols-3 md:grid-cols-6 gap-6 md:gap-8 max-w-5xl mx-auto">
+
+        <!-- Watches -->
+        <a href="#shop" onclick="shopFilterCategory('watches')" class="group text-center reveal reveal-delay-1">
+          <div class="relative mx-auto w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden border-2 border-gold-200/40 group-hover:border-gold-400 transition-all duration-500 shadow-sm group-hover:shadow-lg group-hover:shadow-gold-200/20">
+            <img src="images/luxury-watches.jpg" alt="Watches" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          </div>
+          <p class="font-body text-[10px] md:text-[11px] tracking-elegant uppercase text-charcoal/50 group-hover:text-gold-500 mt-4 transition-colors duration-300">Watches</p>
+        </a>
+
+        <!-- Engagement Rings -->
+        <a href="#shop" onclick="shopFilterCategory('engagement')" class="group text-center reveal reveal-delay-2">
+          <div class="relative mx-auto w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden border-2 border-gold-200/40 group-hover:border-gold-400 transition-all duration-500 shadow-sm group-hover:shadow-lg group-hover:shadow-gold-200/20">
+            <img src="images/diamond-rings.jpg" alt="Engagement Rings" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          </div>
+          <p class="font-body text-[10px] md:text-[11px] tracking-elegant uppercase text-charcoal/50 group-hover:text-gold-500 mt-4 transition-colors duration-300">Engagement</p>
+        </a>
+
+        <!-- Gold Jewellery -->
+        <a href="#shop" onclick="shopFilterCategory('gold')" class="group text-center reveal reveal-delay-3">
+          <div class="relative mx-auto w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden border-2 border-gold-200/40 group-hover:border-gold-400 transition-all duration-500 shadow-sm group-hover:shadow-lg group-hover:shadow-gold-200/20">
+            <img src="images/gold-rings-closeup.jpg" alt="Gold Jewellery" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          </div>
+          <p class="font-body text-[10px] md:text-[11px] tracking-elegant uppercase text-charcoal/50 group-hover:text-gold-500 mt-4 transition-colors duration-300">Gold</p>
+        </a>
+
+        <!-- Necklaces -->
+        <a href="#shop" onclick="shopFilterCategory('necklaces')" class="group text-center reveal reveal-delay-1">
+          <div class="relative mx-auto w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden border-2 border-gold-200/40 group-hover:border-gold-400 transition-all duration-500 shadow-sm group-hover:shadow-lg group-hover:shadow-gold-200/20">
+            <img src="images/necklace-display.jpg" alt="Necklaces &amp; Pendants" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          </div>
+          <p class="font-body text-[10px] md:text-[11px] tracking-elegant uppercase text-charcoal/50 group-hover:text-gold-500 mt-4 transition-colors duration-300">Necklaces</p>
+        </a>
+
+        <!-- Diamonds -->
+        <a href="#shop" onclick="shopFilterCategory('diamonds')" class="group text-center reveal reveal-delay-2">
+          <div class="relative mx-auto w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden border-2 border-gold-200/40 group-hover:border-gold-400 transition-all duration-500 shadow-sm group-hover:shadow-lg group-hover:shadow-gold-200/20">
+            <img src="images/gemstone-rings.jpg" alt="Diamond Jewellery" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          </div>
+          <p class="font-body text-[10px] md:text-[11px] tracking-elegant uppercase text-charcoal/50 group-hover:text-gold-500 mt-4 transition-colors duration-300">Diamonds</p>
+        </a>
+
+        <!-- Pre-Owned -->
+        <a href="#shop" onclick="shopFilterCategory('preowned')" class="group text-center reveal reveal-delay-3">
+          <div class="relative mx-auto w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden border-2 border-gold-200/40 group-hover:border-gold-400 transition-all duration-500 shadow-sm group-hover:shadow-lg group-hover:shadow-gold-200/20">
+            <img src="images/cartier-collection.jpg" alt="Pre-Owned &amp; Antique" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          </div>
+          <p class="font-body text-[10px] md:text-[11px] tracking-elegant uppercase text-charcoal/50 group-hover:text-gold-500 mt-4 transition-colors duration-300">Pre-Owned</p>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══ SHOP — LIVE PRODUCT GALLERY ═══ -->
+  <section id="shop" class="py-28 md:py-36 bg-warm-cream">
+    <div class="max-w-6xl mx-auto px-4 md:px-6">
+      <div class="text-center mb-14 md:mb-18 reveal">
+        <p class="font-body text-[10px] tracking-luxe uppercase text-gold-400 mb-5">Explore</p>
+        <h2 class="font-display text-3xl md:text-5xl tracking-wide text-charcoal font-light">The Shop</h2>
+        <div class="gold-divider mt-7"></div>
+      </div>
+
+      <!-- Filter pills -->
+      <div class="flex justify-center gap-2 md:gap-3 flex-wrap mb-12 md:mb-16 reveal">
+        <button onclick="shopFilterCategory('all')" class="shop-filter active font-body text-[10px] md:text-[11px] tracking-elegant uppercase px-5 py-2 rounded-full border transition-all duration-300" data-cat="all">All</button>
+        <button onclick="shopFilterCategory('watches')" class="shop-filter font-body text-[10px] md:text-[11px] tracking-elegant uppercase px-5 py-2 rounded-full border transition-all duration-300" data-cat="watches">Watches</button>
+        <button onclick="shopFilterCategory('engagement')" class="shop-filter font-body text-[10px] md:text-[11px] tracking-elegant uppercase px-5 py-2 rounded-full border transition-all duration-300" data-cat="engagement">Engagement</button>
+        <button onclick="shopFilterCategory('gold')" class="shop-filter font-body text-[10px] md:text-[11px] tracking-elegant uppercase px-5 py-2 rounded-full border transition-all duration-300" data-cat="gold">Gold</button>
+        <button onclick="shopFilterCategory('necklaces')" class="shop-filter font-body text-[10px] md:text-[11px] tracking-elegant uppercase px-5 py-2 rounded-full border transition-all duration-300" data-cat="necklaces">Necklaces</button>
+        <button onclick="shopFilterCategory('diamonds')" class="shop-filter font-body text-[10px] md:text-[11px] tracking-elegant uppercase px-5 py-2 rounded-full border transition-all duration-300" data-cat="diamonds">Diamonds</button>
+        <button onclick="shopFilterCategory('preowned')" class="shop-filter font-body text-[10px] md:text-[11px] tracking-elegant uppercase px-5 py-2 rounded-full border transition-all duration-300" data-cat="preowned">Pre-Owned</button>
+      </div>
+
+      <!-- Product grid (loaded from Supabase) -->
+      <div id="shop-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5 reveal">
+        <!-- Products render here -->
+      </div>
+
+      <!-- Loading state -->
+      <div id="shop-loading" class="text-center py-20">
+        <div class="w-8 h-8 border-2 border-gold-200 border-t-gold-400 rounded-full animate-spin mx-auto mb-4"></div>
+        <p class="font-body text-xs tracking-elegant uppercase text-charcoal/30">Loading collection...</p>
+      </div>
+
+      <!-- Empty state -->
+      <div id="shop-empty" class="hidden text-center py-20">
+        <div class="w-16 h-16 rounded-full bg-gold-50 flex items-center justify-center mx-auto mb-5">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C9A96E" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+        </div>
+        <p class="font-display text-xl text-charcoal/60 font-light">No pieces in this category yet</p>
+        <p class="font-body text-xs text-charcoal/30 mt-2">Check back soon or explore another category</p>
+      </div>
+
+      <!-- Product detail modal -->
+      <div id="product-lightbox" class="fixed inset-0 z-[60] hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeLightbox()"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4 md:p-8 pointer-events-none">
+          <div class="relative bg-white rounded-2xl md:rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto pointer-events-auto">
+            <button onclick="closeLightbox()" class="absolute top-4 right-4 z-10 w-8 h-8 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-charcoal/60 hover:text-charcoal transition-colors shadow-sm">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <div id="lightbox-image" class="aspect-square bg-warm-cream overflow-hidden rounded-t-2xl md:rounded-t-xl"></div>
+            <div class="p-6 md:p-8">
+              <p id="lightbox-category" class="font-body text-[10px] tracking-luxe uppercase text-gold-400 mb-2"></p>
+              <h3 id="lightbox-name" class="font-display text-2xl md:text-3xl text-charcoal font-light mb-3"></h3>
+              <p id="lightbox-price" class="font-body text-lg text-gold-500 font-medium mb-4"></p>
+              <div class="gold-divider mx-0 mb-4"></div>
+              <p id="lightbox-description" class="font-body text-sm text-charcoal/50 leading-relaxed mb-6"></p>
+              <a href="https://wa.me/35054013690" target="_blank" rel="noopener"
+                 class="btn-gold w-full font-body text-[11px] tracking-elegant uppercase px-6 py-3.5 inline-flex items-center justify-center gap-2 rounded-xl">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="opacity-80"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                Enquire via WhatsApp
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center mt-12 reveal">
+        <a href="https://www.instagram.com/the_studio_gibraltar/" target="_blank" rel="noopener"
+           class="btn-outline inline-flex items-center gap-2 font-body text-[11px] tracking-elegant uppercase px-8 py-3">
+          View more on Instagram
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══ ABOUT ═══ -->
+  <section id="about" class="py-28 md:py-36 bg-warm-cream">
+    <div class="max-w-6xl mx-auto px-6 md:px-10">
+      <div class="text-center mb-16 md:mb-20 reveal">
+        <p class="font-body text-[10px] tracking-luxe uppercase text-gold-400 mb-5">Our Story</p>
+        <h2 class="font-display text-3xl md:text-5xl tracking-wide text-charcoal font-light">Michael &amp; Stephanie</h2>
+        <div class="gold-divider mt-7"></div>
+      </div>
+
+      <!-- Two photos side by side -->
+      <div class="grid grid-cols-2 gap-4 md:gap-8 mb-14 md:mb-20">
+        <div class="reveal reveal-delay-1 overflow-hidden aspect-[3/4] rounded-sm">
+          <img src="images/michael.png" alt="Michael Scott, master jeweller and owner of The Jewellery Studio" class="w-full h-full object-cover hover:scale-[1.03] transition-transform duration-1000" style="object-position: center 55%;" loading="lazy">
+        </div>
+        <div class="reveal reveal-delay-2 overflow-hidden aspect-[3/4] rounded-sm">
+          <img src="images/stephanie.png" alt="Stephanie Scott inside The Jewellery Studio showroom" class="w-full h-full object-cover hover:scale-[1.03] transition-transform duration-1000" loading="lazy">
+        </div>
+      </div>
+
+      <!-- Text below -->
+      <div class="max-w-3xl mx-auto reveal reveal-delay-1">
+        <div class="gold-divider mx-auto mb-10"></div>
+        <p class="font-body text-[15px] md:text-base text-charcoal/60 leading-[1.85] font-light mb-6 text-center">
+          Michael left school at 16 and jumped straight into the world of jewellery, investing all of his time and energy into learning everything he could about the craft. 38 years later, he is a qualified jeweller, stone setter, diamond grader and gemologist, as well as a fully qualified jewellery valuer and appraiser.
+        </p>
+        <p class="font-body text-[15px] md:text-base text-charcoal/60 leading-[1.85] font-light mb-6 text-center">
+          Together with Stephanie, the pair have built The Jewellery Studio into a trusted cornerstone of Main Street. Whether you are looking to commission a bespoke engagement ring, find the perfect pre-owned piece, or need a confidential pawnbroking service, they bring decades of expertise and genuine care to every interaction.
+        </p>
+        <p class="font-body text-[15px] md:text-base text-charcoal/60 leading-[1.85] font-light mb-10 text-center">
+          Michael never stops learning about the ever-changing jewellery industry, and that dedication shows in every piece that passes through the studio.
+        </p>
+        <blockquote class="border-l-2 border-gold-300/50 pl-6 max-w-xl mx-auto">
+          <p class="font-display text-lg md:text-xl italic text-gold-500/80 font-light leading-relaxed">
+            "Every piece of jewellery tells a story.<br>We are here to help you write yours."
+          </p>
+        </blockquote>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══ INSTAGRAM ═══ -->
+  <section class="py-20 md:py-24 bg-white">
+    <div class="max-w-3xl mx-auto px-6 text-center reveal">
+      <div class="flex items-center justify-center gap-4 mb-7">
+        <div class="w-12 h-px bg-gold-400/25"></div>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C9A96E" stroke-width="1.2" class="opacity-50">
+          <rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.2" fill="#C9A96E" stroke="none"/>
+        </svg>
+        <div class="w-12 h-px bg-gold-400/25"></div>
+      </div>
+      <a href="https://www.instagram.com/the_studio_gibraltar/" target="_blank" rel="noopener" class="group inline-block">
+        <p class="font-display text-2xl md:text-3xl tracking-wide text-charcoal group-hover:text-gold-400 transition-colors duration-300">@the_studio_gibraltar</p>
+      </a>
+      <p class="font-body text-[10px] tracking-elegant uppercase text-charcoal/30 mt-3 mb-6">1,437 followers</p>
+      <a href="https://www.instagram.com/the_studio_gibraltar/" target="_blank" rel="noopener"
+         class="btn-outline inline-block font-body text-[11px] tracking-elegant uppercase px-7 py-2.5">
+        Follow Us
+      </a>
+    </div>
+  </section>
+
+
+  <!-- ═══ CONTACT ═══ -->
+  <section id="contact" class="py-28 md:py-36 bg-warm-cream">
+    <div class="max-w-5xl mx-auto px-6 md:px-10">
+      <div class="text-center mb-16 reveal">
+        <p class="font-body text-[10px] tracking-luxe uppercase text-gold-400 mb-5">Get In Touch</p>
+        <h2 class="font-display text-3xl md:text-5xl tracking-wide text-charcoal font-light">Contact Us</h2>
+        <div class="gold-divider mt-7"></div>
+      </div>
+
+      <div class="max-w-lg mx-auto text-center reveal reveal-delay-1">
+        <!-- WhatsApp CTA -->
+        <a href="https://wa.me/35054013690" target="_blank" rel="noopener"
+           class="btn-gold inline-flex items-center gap-3 font-body text-[12px] tracking-elegant uppercase px-12 py-4 mb-14">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Message Us on WhatsApp
+        </a>
+
+        <!-- Contact details grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-6">
+          <div>
+            <p class="font-body text-[9px] tracking-luxe uppercase text-charcoal/30 mb-2">Address</p>
+            <p class="font-display text-[15px] text-charcoal font-light">152 Main Street<br>Gibraltar</p>
+          </div>
+          <div>
+            <p class="font-body text-[9px] tracking-luxe uppercase text-charcoal/30 mb-2">Phone</p>
+            <a href="tel:+35054013690" class="font-display text-[15px] text-charcoal font-light hover:text-gold-400 transition-colors">+350 5401 3690</a>
+          </div>
+          <div>
+            <p class="font-body text-[9px] tracking-luxe uppercase text-charcoal/30 mb-2">Instagram</p>
+            <a href="https://www.instagram.com/the_studio_gibraltar/" target="_blank" rel="noopener" class="font-display text-[15px] text-charcoal font-light hover:text-gold-400 transition-colors">@the_studio_gibraltar</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══ MAP ═══ -->
+  <section class="map-container relative" style="background:#EDE6D8; min-height:380px;">
+    <iframe src="https://www.google.com/maps?q=The+Jewellery+Studio,+5+Bell+Lane,+Gibraltar+GX11+1AA&ll=36.14174,-5.35293&z=19&output=embed"
+      width="100%" height="380" style="border:0;display:block;position:relative;z-index:1;" allowfullscreen="" loading="lazy"
+      referrerpolicy="no-referrer-when-downgrade" title="The Jewellery Studio - 5 Bell Lane, Main Street, Gibraltar"></iframe>
+    <!-- Fallback if map doesn't load -->
+    <div class="absolute inset-0 flex items-center justify-center" style="z-index:0;">
+      <div class="text-center">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#C9A96E" stroke-width="1" class="mx-auto mb-3 opacity-40"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <p class="font-display text-lg text-charcoal/30 mb-2">5 Bell Lane, Main Street, Gibraltar</p>
+        <a href="https://maps.google.com/?q=The+Jewellery+Studio,+5+Bell+Lane,+Gibraltar+GX11+1AA" target="_blank" rel="noopener"
+           class="font-body text-[11px] tracking-elegant uppercase text-gold-400 hover:text-gold-600 underline underline-offset-4 decoration-gold-200 transition-colors">
+          Open in Google Maps &rarr;
+        </a>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══ FOOTER ═══ -->
+  <footer class="py-16 md:py-20" style="background:#2C4268;">
+    <div class="max-w-5xl mx-auto px-6 md:px-10 text-center">
+      <!-- Logo in footer -->
+      <img src="images/tjs-logo.jpg" alt="The Jewellery Studio" class="mx-auto mb-6 h-16 w-auto footer-logo rounded-sm">
+
+      <p class="font-body text-[10px] text-white/20 tracking-wide mb-2">152 Main Street, Gibraltar</p>
+      <div class="flex items-center justify-center gap-6 my-6">
+        <a href="https://www.instagram.com/the_studio_gibraltar/" target="_blank" rel="noopener" class="text-white/20 hover:text-gold-400 transition-colors">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+        </a>
+        <a href="https://wa.me/35054013690" target="_blank" rel="noopener" class="text-white/20 hover:text-gold-400 transition-colors">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        </a>
+      </div>
+      <div class="w-16 h-px bg-gold-400/10 mx-auto mb-6"></div>
+      <p class="font-body text-[10px] text-white/15 tracking-wide">&copy; 2026 The Jewellery Studio. All rights reserved.</p>
+    </div>
+  </footer>
+
+
+  <!-- ═══ THREE.JS — 3D SOLITAIRE ENGAGEMENT RING ═══ -->
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+    try {
+      const container = document.getElementById('hero-3d');
+      const canvas = document.getElementById('hero-canvas');
+      const hint = document.getElementById('interact-hint');
+
+      // Renderer
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true, powerPreference:'high-performance' });
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.4;
+
+      // Scene + Environment
+      const scene = new THREE.Scene();
+      const pmremGenerator = new THREE.PMREMGenerator(renderer);
+      pmremGenerator.compileEquirectangularShader();
+      scene.environment = pmremGenerator.fromScene(new RoomEnvironment()).texture;
+      pmremGenerator.dispose();
+
+      // Camera
+      const camera = new THREE.PerspectiveCamera(30, container.clientWidth/container.clientHeight, 0.1, 100);
+      camera.position.set(0, 2.5, 5.5);
+      camera.lookAt(0, 0.2, 0);
+
+      // Controls
+      const controls = new OrbitControls(camera, canvas);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.04;
+      controls.enableZoom = false;
+      controls.enablePan = false;
+      controls.autoRotate = true;
+      controls.autoRotateSpeed = 0.8;
+      controls.target.set(0, 0.2, 0);
+      controls.minPolarAngle = Math.PI / 4;
+      controls.maxPolarAngle = Math.PI / 2.2;
+
+      // Interaction hint
+      let hintVisible = true;
+      canvas.addEventListener('pointerdown', () => { if(hintVisible){hint.style.opacity='0';hintVisible=false;} }, { once:true });
+      setTimeout(() => { if(hintVisible){hint.style.opacity='0';hintVisible=false;} }, 6000);
+
+      // ── RING GROUP ──
+      // UPRIGHT TIFFANY SOLITAIRE matching reference photos:
+      // - Thin delicate band standing upright in XY plane
+      // - 6 curved prong arms sweeping up from band to hold diamond
+      // - Small gallery/basket where prongs meet the band
+      // - Diamond sits HIGH above the band on the prongs
+      // - No cathedral bump, no collar — prongs ARE the structure
+      const ringGroup = new THREE.Group();
+      const R = 1.15;       // ring center radius
+      const r = 0.09;       // tube radius — THIN delicate band
+
+      // Gold band material
+      const goldMat = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(0.85, 0.70, 0.42),
+        metalness: 1.0,
+        roughness: 0.10,
+        envMapIntensity: 2.0
+      });
+
+      // ── 1. BAND — thin ring standing upright in XY plane ──
+      const bandPts = [];
+      const nSeg = 256;
+      for (let i = 0; i < nSeg; i++) {
+        const t = (i / nSeg) * Math.PI * 2;
+        bandPts.push(new THREE.Vector3(R * Math.cos(t), R * Math.sin(t), 0));
+      }
+      const bandPath = new THREE.CatmullRomCurve3(bandPts, true);
+      const bandGeo = new THREE.TubeGeometry(bandPath, 200, r, 32, true);
+      const ring = new THREE.Mesh(bandGeo, goldMat);
+      ringGroup.add(ring);
+
+      // ── 2. GALLERY / BASKET — small collar at top of band ──
+      const bandTopY = R + r;           // 1.24 — highest point of band surface
+      const galleryR = 0.16;
+      const galleryH = 0.10;
+      const galleryBottomY = bandTopY - 0.03;  // sink into band slightly
+      const galleryGeo = new THREE.CylinderGeometry(galleryR, galleryR + 0.04, galleryH, 24);
+      const gallery = new THREE.Mesh(galleryGeo, goldMat);
+      gallery.position.set(0, galleryBottomY + galleryH / 2, 0);
+      ringGroup.add(gallery);
+
+      // ── 3. DIAMOND DIMENSIONS ──
+      const girdleR = 0.40;
+      const tableR  = 0.20;
+      const pavH    = 0.35;
+      const crownH  = 0.22;
+      const settingH = 0.38;           // prong rise from gallery to girdle
+      const girdleY = galleryBottomY + galleryH + settingH;  // ≈ 1.69
+
+      // ── 4. SIX PRONG ARMS — curved tubes from gallery to diamond ──
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2;
+        const baseR = galleryR * 0.80;
+        const tipR  = girdleR * 0.90;
+
+        // 3-point curve: base at gallery → mid sweeps out → tip at girdle
+        const base = new THREE.Vector3(
+          Math.cos(a) * baseR,
+          galleryBottomY + galleryH * 0.6,
+          Math.sin(a) * baseR
+        );
+        const mid = new THREE.Vector3(
+          Math.cos(a) * (baseR + tipR) * 0.52,
+          (base.y + girdleY + crownH * 0.3) * 0.50,
+          Math.sin(a) * (baseR + tipR) * 0.52
+        );
+        const tip = new THREE.Vector3(
+          Math.cos(a) * tipR,
+          girdleY + crownH * 0.35,
+          Math.sin(a) * tipR
+        );
+
+        const prongCurve = new THREE.CatmullRomCurve3([base, mid, tip]);
+        const prongGeo = new THREE.TubeGeometry(prongCurve, 20, 0.028, 8, false);
+        const prong = new THREE.Mesh(prongGeo, goldMat);
+        ringGroup.add(prong);
+      }
+
+      // ── 5. DIAMOND MATERIAL ──
+      const diamondMat = new THREE.MeshPhysicalMaterial({
+        color: new THREE.Color(0.92, 0.95, 1.0),
+        metalness: 0.0,
+        roughness: 0.0,
+        transmission: 0.50,
+        thickness: 1.5,
+        ior: 2.42,
+        envMapIntensity: 5.0,
+        clearcoat: 1.0,
+        clearcoatRoughness: 0.0,
+        specularIntensity: 5.0,
+        specularColor: new THREE.Color(1, 1, 1),
+        attenuationColor: new THREE.Color(0.82, 0.86, 1.0),
+        attenuationDistance: 0.06,
+        reflectivity: 1.0,
+        sheen: 0.4,
+        sheenColor: new THREE.Color(0.9, 0.95, 1.0),
+      });
+
+      // ── 6. PAVILION (inverted cone — tip sinks into the prong basket) ──
+      const pavGeo = new THREE.ConeGeometry(girdleR, pavH, 16);
+      const pavilion = new THREE.Mesh(pavGeo, diamondMat);
+      pavilion.rotation.x = Math.PI;
+      pavilion.position.set(0, girdleY - pavH / 2, 0);
+      ringGroup.add(pavilion);
+
+      // ── 7. CROWN (tapered upward from girdle to table) ──
+      const crownGeo = new THREE.CylinderGeometry(tableR, girdleR, crownH, 16);
+      const crown = new THREE.Mesh(crownGeo, diamondMat);
+      crown.position.set(0, girdleY + crownH / 2, 0);
+      ringGroup.add(crown);
+
+      // ── 8. TABLE FACET ──
+      const tableGeo = new THREE.CylinderGeometry(tableR, tableR, 0.01, 16);
+      const tableMat = new THREE.MeshPhysicalMaterial({
+        color: 0xffffff,
+        metalness: 0.05,
+        roughness: 0.0,
+        transmission: 0.4,
+        ior: 2.42,
+        envMapIntensity: 6.0,
+        clearcoat: 1.0,
+        specularIntensity: 5.0,
+      });
+      const tableFacet = new THREE.Mesh(tableGeo, tableMat);
+      tableFacet.position.set(0, girdleY + crownH + 0.005, 0);
+      ringGroup.add(tableFacet);
+
+      // ── ADD TO SCENE ──
+      scene.add(ringGroup);
+
+      // ── SPARKLE PARTICLES ──
+      const particleCount = 50;
+      const particlePositions = new Float32Array(particleCount * 3);
+      const particleSpeeds = [];
+      for (let i = 0; i < particleCount; i++) {
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(2 * Math.random() - 1);
+        const rr = 2.0 + Math.random() * 2.5;
+        particlePositions[i*3] = rr * Math.sin(phi) * Math.cos(theta);
+        particlePositions[i*3+1] = rr * Math.cos(phi);
+        particlePositions[i*3+2] = rr * Math.sin(phi) * Math.sin(theta);
+        particleSpeeds.push({
+          x: (Math.random()-0.5) * 0.002,
+          y: (Math.random()-0.5) * 0.0015,
+          z: (Math.random()-0.5) * 0.002
+        });
+      }
+      const particleGeo = new THREE.BufferGeometry();
+      particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+      const particleMat = new THREE.PointsMaterial({
+        color: 0xC9A96E, size: 0.02, transparent: true, opacity: 0.28,
+        sizeAttenuation: true, depthWrite: false
+      });
+      const particles = new THREE.Points(particleGeo, particleMat);
+      scene.add(particles);
+
+      // ── LIGHTING ──
+      const fillLight = new THREE.DirectionalLight(0xFFF8EE, 0.5);
+      fillLight.position.set(-3, 4, 5);
+      scene.add(fillLight);
+
+      // Orbiting spotlight for diamond sparkle (orbits around diamond height)
+      const sparkleLight = new THREE.PointLight(0xFFFFFF, 1.0, 12);
+      sparkleLight.position.set(2, 3, 2);
+      scene.add(sparkleLight);
+
+      // Secondary coloured light for rainbow fire effect
+      const fireLight = new THREE.PointLight(0xCCDDFF, 0.4, 8);
+      fireLight.position.set(-2, 4, -1);
+      scene.add(fireLight);
+
+      // ── ANIMATE ──
+      const clock = new THREE.Clock();
+      function animate() {
+        requestAnimationFrame(animate);
+        const t = clock.getElapsedTime();
+
+        // Gentle float (offset -0.2 to prevent diamond top from clipping)
+        ringGroup.position.y = -0.2 + Math.sin(t * 0.7) * 0.05;
+
+        // Orbit lights around diamond for dynamic sparkle
+        sparkleLight.position.x = Math.sin(t * 0.6) * 3;
+        sparkleLight.position.z = Math.cos(t * 0.6) * 3;
+        sparkleLight.position.y = 3 + Math.sin(t * 0.3) * 0.5;
+
+        fireLight.position.x = Math.cos(t * 0.4) * 2.5;
+        fireLight.position.z = Math.sin(t * 0.4) * 2.5;
+
+        // Update particles
+        const posArr = particles.geometry.attributes.position.array;
+        for (let i = 0; i < particleCount; i++) {
+          posArr[i*3] += particleSpeeds[i].x;
+          posArr[i*3+1] += particleSpeeds[i].y;
+          posArr[i*3+2] += particleSpeeds[i].z;
+          const px = posArr[i*3], py = posArr[i*3+1], pz = posArr[i*3+2];
+          if (Math.sqrt(px*px + py*py + pz*pz) > 5) {
+            const th = Math.random() * Math.PI * 2;
+            const ph = Math.acos(2 * Math.random() - 1);
+            const rr = 2.0 + Math.random();
+            posArr[i*3] = rr * Math.sin(ph) * Math.cos(th);
+            posArr[i*3+1] = rr * Math.cos(ph);
+            posArr[i*3+2] = rr * Math.sin(ph) * Math.sin(th);
+          }
+        }
+        particles.geometry.attributes.position.needsUpdate = true;
+        particles.rotation.y = t * 0.02;
+
+        controls.update();
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      // Resize
+      function onResize() {
+        const w = container.clientWidth, h = container.clientHeight;
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+      }
+      window.addEventListener('resize', onResize);
+      window.addEventListener('orientationchange', () => setTimeout(onResize, 200));
+
+    } catch (e) {
+      console.warn('WebGL not supported:', e);
+      const c = document.getElementById('hero-canvas'); if(c) c.style.display = 'none';
+      const h = document.getElementById('interact-hint'); if(h) h.style.display = 'none';
+    }
+  </script>
+
+  <!-- ═══ UI SCRIPTS ═══ -->
+  <script>
+    // Scroll reveals
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
+    }, { threshold: 0.08, rootMargin: '0px 0px -50px 0px' });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // Sticky nav
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      navbar.classList.toggle('nav-scrolled', window.scrollY > 60);
+    }, { passive: true });
+
+    // Mobile menu
+    const menuToggle = document.getElementById('menu-toggle');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const bar1 = document.getElementById('bar1');
+    const bar2 = document.getElementById('bar2');
+    let menuOpen = false;
+    menuToggle.addEventListener('click', () => {
+      menuOpen = !menuOpen;
+      if (menuOpen) {
+        mobileMenu.style.maxHeight = mobileMenu.scrollHeight + 'px';
+        bar1.style.transform = 'rotate(45deg) translate(2px,2px)';
+        bar2.style.transform = 'rotate(-45deg) translate(2px,-2px)';
+      } else {
+        closeMobileMenu();
+      }
+    });
+    function closeMobileMenu() {
+      menuOpen = false;
+      mobileMenu.style.maxHeight = '0';
+      bar1.style.transform = '';
+      bar2.style.transform = '';
+    }
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    // ═══ SHOP — PRODUCT GALLERY ═══
+    const shopSupabase = supabase.createClient(
+      'https://whnwyibqnwemvpxqavvl.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indobnd5aWJxbndlbXZweHFhdnZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5OTkyODYsImV4cCI6MjA4ODU3NTI4Nn0.StzM-cqsx_DAgiD8IBU1cmZbLgev4QxJkWdiQJGIXWk'
+    );
+
+    let shopProducts = [];
+    let shopCurrentFilter = 'all';
+
+    function esc(str) {
+      const d = document.createElement('div');
+      d.textContent = str || '';
+      return d.innerHTML;
+    }
+
+    async function loadShopProducts() {
+      const { data, error } = await shopSupabase
+        .from('products')
+        .select('id, name, description, selling_price, category, image_url, featured')
+        .eq('active', true)
+        .order('featured', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      document.getElementById('shop-loading').classList.add('hidden');
+
+      if (error) {
+        console.error('Error loading products:', error);
+        document.getElementById('shop-empty').classList.remove('hidden');
+        return;
+      }
+
+      shopProducts = data || [];
+      renderShopProducts();
+    }
+
+    function renderShopProducts() {
+      const grid = document.getElementById('shop-grid');
+      const empty = document.getElementById('shop-empty');
+
+      const filtered = shopCurrentFilter === 'all'
+        ? shopProducts
+        : shopProducts.filter(p => p.category === shopCurrentFilter);
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+      }
+
+      empty.classList.add('hidden');
+      const categoryLabels = {
+        watches: 'Watches',
+        engagement: 'Engagement',
+        gold: 'Gold',
+        necklaces: 'Necklaces',
+        diamonds: 'Diamonds',
+        preowned: 'Pre-Owned'
+      };
+
+      grid.innerHTML = filtered.map(p => `
+        <div class="shop-card rounded-sm" onclick="openLightbox('${p.id}')">
+          <div class="aspect-[3/4] bg-warm-cream overflow-hidden relative">
+            ${p.image_url
+              ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)}" class="w-full h-full object-cover" loading="lazy">`
+              : `<div class="w-full h-full flex items-center justify-center">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(201,169,110,0.3)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+                </div>`
+            }
+            ${p.featured ? '<div class="absolute top-3 left-3"><span class="bg-gold-400 text-white text-[9px] font-medium tracking-wide uppercase px-2.5 py-1 rounded-full">Featured</span></div>' : ''}
+          </div>
+          <div class="px-3 py-4 md:px-4 md:py-5">
+            <p class="font-body text-[9px] tracking-luxe uppercase text-gold-400 mb-1">${categoryLabels[p.category] || p.category}</p>
+            <p class="font-display text-base md:text-lg text-charcoal font-light leading-tight truncate">${esc(p.name)}</p>
+            ${p.selling_price
+              ? `<p class="font-body text-sm text-charcoal/50 mt-1.5">&pound;${Number(p.selling_price).toLocaleString()}</p>`
+              : '<p class="font-body text-[10px] text-gold-400 mt-1.5 tracking-wide uppercase">Price on request</p>'
+            }
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function shopFilterCategory(cat) {
+      shopCurrentFilter = cat;
+      document.querySelectorAll('.shop-filter').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.cat === cat);
+      });
+      renderShopProducts();
+    }
+
+    function openLightbox(id) {
+      const p = shopProducts.find(x => x.id === id);
+      if (!p) return;
+
+      const categoryLabels = {
+        watches: 'Watches', engagement: 'Engagement Rings', gold: 'Gold Jewellery',
+        necklaces: 'Necklaces & Pendants', diamonds: 'Diamond Jewellery', preowned: 'Pre-Owned'
+      };
+
+      document.getElementById('lightbox-image').innerHTML = p.image_url
+        ? `<img src="${p.image_url}" alt="${p.name}" class="w-full h-full object-cover">`
+        : `<div class="w-full h-full bg-warm-cream flex items-center justify-center"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(201,169,110,0.3)" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></div>`;
+      document.getElementById('lightbox-category').textContent = categoryLabels[p.category] || p.category;
+      document.getElementById('lightbox-name').textContent = p.name;
+      document.getElementById('lightbox-price').textContent = p.selling_price ? '\u00A3' + Number(p.selling_price).toLocaleString() : 'Price on request';
+      document.getElementById('lightbox-description').textContent = p.description || 'Contact us for more details about this piece.';
+
+      document.getElementById('product-lightbox').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+      document.getElementById('product-lightbox').classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    // Close lightbox on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeLightbox();
+    });
+
+    // Load products on page load
+    loadShopProducts();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/internal", "destination": "/internal/index.html" },
+    { "source": "/internal/", "destination": "/internal/index.html" },
+    { "source": "/((?!internal).*)", "destination": "/index.html" }
+  ]
+}

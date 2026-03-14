@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+@theme {
+  /* Navy palette */
+  --color-navy: #1B2A3F;
+  --color-navy-deep: #142234;
+  --color-navy-card: #213349;
+  --color-navy-darkest: #0F1C2B;
+
+  /* Gold */
+  --color-gold: #C9A84C;
+  --color-gold-muted: #A8873C;
+
+  /* Text */
+  --color-warm: #F5F0E8;
+  --color-muted: #9BA8B5;
+  --color-dim: #4A5A6A;
+
+  /* Surface */
+  --color-cream: #FAF8F5;
+  --color-cream-border: #E8E0D4;
+
+  /* Fonts */
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-body: "Jost", system-ui, sans-serif;
+
+  /* Letter spacing */
+  --tracking-luxe: 0.25em;
+  --tracking-elegant: 0.2em;
+}
+
+/* Selection */
+::selection {
+  background: rgba(201, 168, 76, 0.3);
+  color: #F5F0E8;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  overflow-x: hidden;
+}
+
+/* Ken Burns animation */
+@keyframes kenBurns {
+  from { transform: scale(1); }
+  to { transform: scale(1.08); }
+}
+
+/* Gentle bounce for scroll indicator */
+@keyframes gentleBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(8px); }
+}
+
+/* Brand marquee */
+@keyframes marqueeScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #142234;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(201, 168, 76, 0.3);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(201, 168, 76, 0.5);
+}
