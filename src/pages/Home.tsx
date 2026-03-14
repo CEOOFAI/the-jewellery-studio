@@ -299,7 +299,7 @@ export default function Home() {
             ))}
           </div>
           <p className="font-body text-xs text-muted">
-            {googleReviews.length} reviews on Google
+            4 reviews on Google
           </p>
           <GoldDivider className="mt-4 mb-12" />
         </SectionReveal>
@@ -334,7 +334,7 @@ export default function Home() {
         <SectionReveal delay={0.4}>
           <div className="text-center mt-10">
             <a
-              href="https://www.google.com/maps/place/The+Jewellery+Studio"
+              href="https://www.google.com/maps?q=The+Jewellery+Studio,+5+Bell+Lane,+Gibraltar+GX11+1AA"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-gold uppercase text-[11px] tracking-elegant hover:text-gold-muted font-body transition-colors"
