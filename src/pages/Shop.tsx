@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import usePageTitle from "../hooks/usePageTitle";
 import GoldDivider from "../components/GoldDivider";
 import ProductCard from "../components/ProductCard";
 import ProductLightbox from "../components/ProductLightbox";
@@ -32,6 +33,7 @@ export default function Shop() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [sort, setSort] = useState<SortOption>("newest");
 
+  usePageTitle("Shop Fine Jewellery in Gibraltar");
   const activeFilter = searchParams.get("category") || "all";
 
   useEffect(() => {

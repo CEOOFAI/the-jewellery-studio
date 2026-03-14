@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import usePageTitle from "../hooks/usePageTitle";
 import GoldDivider from "../components/GoldDivider";
 import SectionReveal from "../components/SectionReveal";
 import MagneticButton from "../components/MagneticButton";
@@ -117,6 +118,7 @@ const categories = [
 ];
 
 export default function Home() {
+  usePageTitle();
   const headingWords = ["The", "Jewellery", "Studio"];
 
   return (
@@ -183,7 +185,7 @@ export default function Home() {
             </motion.div>
           </motion.div>
 
-          <div className="hidden md:block w-[380px] h-[380px] relative z-20 mx-auto mt-8">
+          <div className="w-[280px] h-[280px] md:w-[380px] md:h-[380px] relative z-20 mx-auto mt-8">
             <HeroRing />
           </div>
         </div>

@@ -2,8 +2,10 @@ import GoldDivider from "../components/GoldDivider";
 import SectionReveal from "../components/SectionReveal";
 import AnimatedCounter from "../components/AnimatedCounter";
 import MagneticButton from "../components/MagneticButton";
+import usePageTitle from "../hooks/usePageTitle";
 
 export default function About() {
+  usePageTitle("About Michael & Stephanie Scott");
   return (
     <div className="bg-navy min-h-screen pt-24 pb-20">
       <div className="max-w-6xl mx-auto px-6">

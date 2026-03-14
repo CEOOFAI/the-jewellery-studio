@@ -1,7 +1,9 @@
 import GoldDivider from "../components/GoldDivider";
 import SectionReveal from "../components/SectionReveal";
+import usePageTitle from "../hooks/usePageTitle";
 
 export default function Privacy() {
+  usePageTitle("Privacy Policy");
   return (
     <div className="bg-navy min-h-screen pt-24 pb-20">
       <div className="max-w-3xl mx-auto px-6">

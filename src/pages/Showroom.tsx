@@ -3,6 +3,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import GoldDivider from "../components/GoldDivider";
 import SectionReveal from "../components/SectionReveal";
 import MagneticButton from "../components/MagneticButton";
+import usePageTitle from "../hooks/usePageTitle";
 
 const brandLogos = [
   { src: "/images/brands/cartier.png", alt: "Cartier" },
@@ -25,6 +26,7 @@ const galleryImages = [
 ];
 
 export default function Showroom() {
+  usePageTitle("The Showroom");
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: heroRef,

@@ -1,8 +1,10 @@
 import GoldDivider from "../components/GoldDivider";
 import SectionReveal from "../components/SectionReveal";
 import MagneticButton from "../components/MagneticButton";
+import usePageTitle from "../hooks/usePageTitle";
 
 export default function Contact() {
+  usePageTitle("Contact Us in Gibraltar");
   return (
     <div className="bg-navy min-h-screen pt-24 pb-20">
       <div className="max-w-5xl mx-auto px-6">

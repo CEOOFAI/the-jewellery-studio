@@ -69,6 +69,13 @@ export default function ProductCard({ product, onClick, index }: ProductCardProp
             Featured
           </span>
         )}
+
+        {/* New badge — added in last 14 days */}
+        {!product.featured && product.created_at && (Date.now() - new Date(product.created_at).getTime()) < 14 * 24 * 60 * 60 * 1000 && (
+          <span className="absolute top-3 left-3 bg-navy text-gold border border-gold/30 font-body text-[9px] uppercase tracking-elegant px-3 py-1 rounded-full">
+            New
+          </span>
+        )}
       </div>
 
       {/* Text */}
