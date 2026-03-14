@@ -31,9 +31,9 @@ const headingContainerVariants = {
 };
 
 const collectionImages = [
-  { src: "/images/luxury-watches.jpg", alt: "Luxury Watches" },
-  { src: "/images/diamond-rings.jpg", alt: "Diamond Rings" },
-  { src: "/images/gemstone-rings.jpg", alt: "Gemstone Rings" },
+  { src: "/images/luxury-watches.jpg", alt: "Pre-owned luxury watches including Rolex and Omega at The Jewellery Studio Gibraltar" },
+  { src: "/images/diamond-rings.jpg", alt: "Hand-crafted diamond engagement rings on display at The Jewellery Studio" },
+  { src: "/images/gemstone-rings.jpg", alt: "Collection of coloured gemstone rings available in Gibraltar" },
 ];
 
 const services = [
@@ -108,12 +108,12 @@ const googleReviews = [
 ];
 
 const categories = [
-  { name: "Watches", image: "/images/luxury-watches.jpg", slug: "watches" },
-  { name: "Engagement", image: "/images/diamond-rings.jpg", slug: "engagement" },
-  { name: "Gold", image: "/images/gold-rings-closeup.jpg", slug: "gold" },
-  { name: "Necklaces", image: "/images/necklace-display.jpg", slug: "necklaces" },
-  { name: "Diamonds", image: "/images/gemstone-rings.jpg", slug: "diamonds" },
-  { name: "Pre-Owned", image: "/images/cartier-collection.jpg", slug: "preowned" },
+  { name: "Watches", image: "/images/luxury-watches.jpg", slug: "watches", alt: "Shop luxury watches in Gibraltar" },
+  { name: "Engagement", image: "/images/diamond-rings.jpg", slug: "engagement", alt: "Shop engagement rings in Gibraltar" },
+  { name: "Gold", image: "/images/gold-rings-closeup.jpg", slug: "gold", alt: "Shop gold jewellery in Gibraltar" },
+  { name: "Necklaces", image: "/images/necklace-display.jpg", slug: "necklaces", alt: "Shop necklaces and pendants in Gibraltar" },
+  { name: "Diamonds", image: "/images/gemstone-rings.jpg", slug: "diamonds", alt: "Shop diamond jewellery in Gibraltar" },
+  { name: "Pre-Owned", image: "/images/cartier-collection.jpg", slug: "preowned", alt: "Shop pre-owned designer jewellery including Cartier and Tiffany" },
 ];
 
 export default function Home() {
@@ -183,7 +183,7 @@ export default function Home() {
             </motion.div>
           </motion.div>
 
-          <div className="w-[280px] h-[280px] md:w-[380px] md:h-[380px] relative z-20 mx-auto mt-8">
+          <div className="hidden md:block w-[380px] h-[380px] relative z-20 mx-auto mt-8">
             <HeroRing />
           </div>
         </div>
@@ -371,7 +371,7 @@ export default function Home() {
                 <div className="w-[100px] h-[100px] md:w-[200px] md:h-[200px] rounded-full overflow-hidden mx-auto relative">
                   <img
                     src={cat.image}
-                    alt={cat.name}
+                    alt={cat.alt}
                     loading="lazy"
                     className="object-cover w-full h-full group-hover:scale-[1.04] transition-transform duration-500"
                   />

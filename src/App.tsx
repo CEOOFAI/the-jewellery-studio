@@ -5,6 +5,8 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import GoldCursor from "./components/GoldCursor";
 import BackToTop from "./components/BackToTop";
+import WhatsAppFloat from "./components/WhatsAppFloat";
+import Breadcrumbs from "./components/Breadcrumbs";
 import Home from "./pages/Home";
 import Shop from "./pages/Shop";
 import Showroom from "./pages/Showroom";
@@ -82,11 +84,13 @@ export default function App() {
       <GoldCursor />
       <ScrollToTop />
       <Navbar />
+      <Breadcrumbs />
       <main>
         <AnimatedRoutes />
       </main>
       <Footer />
       <BackToTop />
+      <WhatsAppFloat />
     </>
   );
 }

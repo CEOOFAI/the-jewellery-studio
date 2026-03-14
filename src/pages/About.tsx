@@ -24,7 +24,7 @@ export default function About() {
             <div className="aspect-[3/4] overflow-hidden rounded-sm">
               <img
                 src="/images/michael.png"
-                alt="Michael"
+                alt="Michael Scott, master jeweller and owner of The Jewellery Studio Gibraltar"
                 className="object-cover w-full h-full"
                 style={{ objectPosition: "center 55%" }}
               />
@@ -34,7 +34,7 @@ export default function About() {
             <div className="aspect-[3/4] overflow-hidden rounded-sm">
               <img
                 src="/images/stephanie.png"
-                alt="Stephanie"
+                alt="Stephanie Scott, co-owner of The Jewellery Studio Gibraltar"
                 className="object-cover w-full h-full"
               />
             </div>

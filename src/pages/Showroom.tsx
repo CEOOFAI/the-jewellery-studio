@@ -16,12 +16,12 @@ const brandLogos = [
 ];
 
 const galleryImages = [
-  { src: "/images/watch-cabinet.jpg", alt: "Watch cabinet", aspect: "aspect-[4/3]" },
-  { src: "/images/fine-jewellery-display.jpg", alt: "Fine jewellery display", aspect: "aspect-[3/4]" },
-  { src: "/images/ring-tray.jpg", alt: "Ring tray", aspect: "aspect-[3/4]" },
-  { src: "/images/tiffany-display.jpg", alt: "Tiffany display", aspect: "aspect-[4/3]" },
-  { src: "/images/fine-jewellery-closeup.jpg", alt: "Fine jewellery closeup", aspect: "aspect-[4/3]" },
-  { src: "/images/silver-jewellery.jpg", alt: "Silver jewellery", aspect: "aspect-[3/4]" },
+  { src: "/images/watch-cabinet.jpg", alt: "Luxury watch cabinet displaying Rolex, Omega and TAG Heuer timepieces", aspect: "aspect-[4/3]" },
+  { src: "/images/fine-jewellery-display.jpg", alt: "Fine jewellery display case with diamond and gold pieces", aspect: "aspect-[3/4]" },
+  { src: "/images/ring-tray.jpg", alt: "Tray of handcrafted gold and diamond rings at The Jewellery Studio", aspect: "aspect-[3/4]" },
+  { src: "/images/tiffany-display.jpg", alt: "Tiffany & Co designer jewellery on display in Gibraltar", aspect: "aspect-[4/3]" },
+  { src: "/images/fine-jewellery-closeup.jpg", alt: "Close-up of fine jewellery pieces including gemstone rings", aspect: "aspect-[4/3]" },
+  { src: "/images/silver-jewellery.jpg", alt: "Silver jewellery collection including bracelets and pendants", aspect: "aspect-[3/4]" },
 ];
 
 export default function Showroom() {
