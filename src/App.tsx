@@ -18,7 +18,6 @@ import Contact from "./pages/Contact";
 import Privacy from "./pages/Privacy";
 import GoldAndSilver from "./pages/GoldAndSilver";
 import ProductDetail from "./pages/ProductDetail";
-import DiamondGrader from "./pages/DiamondGrader";
 import RepairTracker from "./pages/RepairTracker";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
@@ -77,7 +76,6 @@ const pages = [
   { path: "/shop", element: <Shop /> },
   { path: "/shop/:id", element: <ProductDetail /> },
   { path: "/bespoke", element: <Bespoke /> },
-  { path: "/diamond-grader", element: <DiamondGrader /> },
   { path: "/repair-tracker", element: <RepairTracker /> },
   { path: "/gold-and-silver", element: <GoldAndSilver /> },
   { path: "/services", element: <Services /> },

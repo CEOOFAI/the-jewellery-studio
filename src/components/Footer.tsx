@@ -87,6 +87,22 @@ export default function Footer() {
           </a>
         </div>
 
+        {/* Quick links */}
+        <div className="flex items-center gap-6 mb-6">
+          <Link
+            to="/blog"
+            className="font-body text-[11px] uppercase tracking-elegant text-muted hover:text-gold transition-colors duration-300"
+          >
+            Blog
+          </Link>
+          <Link
+            to="/vault"
+            className="font-body text-[11px] uppercase tracking-elegant text-muted hover:text-gold transition-colors duration-300"
+          >
+            Vault
+          </Link>
+        </div>
+
         {/* Gold divider */}
         <div className="w-16 h-px bg-[rgba(201,168,76,0.3)] mx-auto mb-6" />
 
