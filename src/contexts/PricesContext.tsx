@@ -2,11 +2,11 @@ import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import type { PriceData, PricesState } from "../lib/priceTypes";
 
-// Fallback values matching the old hardcoded data so nothing breaks if API is down
+// Fallback values (updated 2026-03-16 from gold-api.com) so nothing breaks if API is down
 const FALLBACK_DATA: PriceData = {
-  gold: { gbpPerGram: 68.42, eurPerGram: 79.53, usdPerGram: 86.21, usdPerOz: 2681 },
-  silver: { gbpPerGram: 0.78, eurPerGram: 0.91, usdPerGram: 0.98, usdPerOz: 30.5 },
-  fx: { gbpUsd: 0.79, eurUsd: 0.92 },
+  gold: { gbpPerGram: 121.30, eurPerGram: 140.43, usdPerGram: 160.90, usdPerOz: 5004.5 },
+  silver: { gbpPerGram: 1.94, eurPerGram: 2.25, usdPerGram: 2.57, usdPerOz: 80.08 },
+  fx: { gbpUsd: 0.754, eurUsd: 0.873 },
   timestamp: new Date().toISOString(),
   fallback: true,
 };

@@ -2,17 +2,16 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const TROY_OZ_TO_GRAM = 31.1035;
 
-// Fallback prices (updated periodically as a safety net)
+// Fallback prices (updated 2026-03-16 from gold-api.com)
 const FALLBACK = {
-  gold: { gbpPerGram: 68.42, eurPerGram: 79.53, usdPerGram: 86.21, usdPerOz: 2681 },
-  silver: { gbpPerGram: 0.78, eurPerGram: 0.91, usdPerGram: 0.98, usdPerOz: 30.5 },
-  fx: { gbpUsd: 0.79, eurUsd: 0.92 },
+  gold: { gbpPerGram: 121.30, eurPerGram: 140.43, usdPerGram: 160.90, usdPerOz: 5004.5 },
+  silver: { gbpPerGram: 1.94, eurPerGram: 2.25, usdPerGram: 2.57, usdPerOz: 80.08 },
+  fx: { gbpUsd: 0.754, eurUsd: 0.873 },
   timestamp: new Date().toISOString(),
   fallback: true,
 };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Only allow GET
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -22,9 +21,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
 
   try {
-    // Fetch metal prices and FX rates in parallel
-    const [metalsRes, fxRes] = await Promise.all([
-      fetch('https://api.metals.live/v1/spot', {
+    // Fetch gold, silver, and FX rates in parallel
+    // Using gold-api.com (free, no key needed) instead of metals.live (blocks Vercel)
+    const [goldRes, silverRes, fxRes] = await Promise.all([
+      fetch('https://api.gold-api.com/price/XAU', {
+        headers: { 'User-Agent': 'TheJewelleryStudio/1.0' },
+        signal: AbortSignal.timeout(8000),
+      }),
+      fetch('https://api.gold-api.com/price/XAG', {
         headers: { 'User-Agent': 'TheJewelleryStudio/1.0' },
         signal: AbortSignal.timeout(8000),
       }),
@@ -34,45 +38,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }),
     ]);
 
-    if (!metalsRes.ok || !fxRes.ok) {
-      console.error(`API status: metals=${metalsRes.status} (${metalsRes.statusText}), fx=${fxRes.status} (${fxRes.statusText})`);
-      throw new Error(`API error: metals=${metalsRes.status}, fx=${fxRes.status}`);
+    if (!goldRes.ok || !silverRes.ok || !fxRes.ok) {
+      console.error(`API status: gold=${goldRes.status}, silver=${silverRes.status}, fx=${fxRes.status}`);
+      throw new Error('API request failed');
     }
 
-    const metalsData = await metalsRes.json();
+    const goldData = await goldRes.json();
+    const silverData = await silverRes.json();
     const fxData = await fxRes.json();
 
-    console.log('Metals API response shape:', JSON.stringify(metalsData).slice(0, 200));
-    console.log('FX API rates available:', !!fxData.rates?.GBP, !!fxData.rates?.EUR);
-
-    // metals.live returns an array of objects, each with a metal name and price
-    // Format: [{ gold: 2950.50, silver: 33.20, platinum: ..., palladium: ... }]
-    // OR it could be [{gold: ...}] depending on version
-    let goldUsdOz: number;
-    let silverUsdOz: number;
-
-    if (Array.isArray(metalsData)) {
-      // Could be [{gold: x, silver: y}] or separate objects
-      const first = metalsData[0];
-      if (first && typeof first.gold === 'number') {
-        goldUsdOz = first.gold;
-        silverUsdOz = first.silver;
-      } else {
-        // Try to find gold and silver in separate array entries
-        const goldEntry = metalsData.find((d: Record<string, unknown>) => 'gold' in d);
-        const silverEntry = metalsData.find((d: Record<string, unknown>) => 'silver' in d);
-        goldUsdOz = goldEntry?.gold as number;
-        silverUsdOz = silverEntry?.silver as number;
-      }
-    } else if (metalsData && typeof metalsData.gold === 'number') {
-      goldUsdOz = metalsData.gold;
-      silverUsdOz = metalsData.silver;
-    } else {
-      throw new Error('Unexpected metals API response format');
-    }
+    // gold-api.com returns { name: "Gold", price: 5004.5, symbol: "XAU", ... }
+    // Price is in USD per troy ounce
+    const goldUsdOz = goldData.price;
+    const silverUsdOz = silverData.price;
 
     if (!goldUsdOz || !silverUsdOz) {
-      throw new Error('Missing gold or silver price from API');
+      console.error('Missing prices:', { goldData, silverData });
+      throw new Error('Missing gold or silver price');
     }
 
     const gbpRate = fxData.rates?.GBP;
@@ -112,8 +94,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   } catch (error) {
     console.error('Price API error:', error instanceof Error ? error.message : error);
-    console.error('Price API full error:', error);
-    // Return fallback prices so the site never breaks
     return res.status(200).json(FALLBACK);
   }
 }
