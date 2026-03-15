@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import GoldDivider from "../components/GoldDivider";
 import SectionReveal from "../components/SectionReveal";
@@ -6,7 +6,17 @@ import MagneticButton from "../components/MagneticButton";
 import useSEO from "../hooks/useSEO";
 import { usePrices } from "../contexts/PricesContext";
 
-/* ─── Static Data (charts / purity tables) ─────────────────── */
+/* ─── Types ────────────────────────────────────────────────── */
+
+interface HistoryData {
+  gold: number[];
+  silver: number[];
+  dates: string[];
+  range: string;
+  fallback: boolean;
+}
+
+/* ─── Static Data (purity tables) ──────────────────────────── */
 
 const PURITY: Record<string, { label: string; factor: number }[]> = {
   gold: [
@@ -21,19 +31,26 @@ const PURITY: Record<string, { label: string; factor: number }[]> = {
   ],
 };
 
-/* Real historical price data (GBP per gram, approximate) */
-const GOLD_DATA: Record<string, number[]> = {
+/* Fallback static data in case the API fails */
+const FALLBACK_GOLD: Record<string, number[]> = {
   "1M": [72.50, 73.10, 71.80, 73.50, 74.20],
   "6M": [62.30, 64.50, 65.80, 67.20, 69.40, 72.50, 74.20],
   "1Y": [55.80, 58.40, 60.20, 62.30, 67.20, 72.50, 74.20],
   "5Y": [42.50, 44.80, 49.20, 55.80, 62.30, 74.20],
 };
 
-const SILVER_DATA: Record<string, number[]> = {
+const FALLBACK_SILVER: Record<string, number[]> = {
   "1M": [0.74, 0.76, 0.75, 0.77, 0.78],
   "6M": [0.68, 0.70, 0.71, 0.73, 0.74, 0.76, 0.78],
   "1Y": [0.62, 0.64, 0.66, 0.68, 0.73, 0.76, 0.78],
   "5Y": [0.52, 0.55, 0.58, 0.62, 0.68, 0.78],
+};
+
+const FALLBACK_DATES: Record<string, string[]> = {
+  "1M": ["2026-02-16", "2026-02-23", "2026-03-02", "2026-03-09", "2026-03-16"],
+  "6M": ["2025-09-16", "2025-10-16", "2025-11-16", "2025-12-16", "2026-01-16", "2026-02-16", "2026-03-16"],
+  "1Y": ["2025-03-16", "2025-05-16", "2025-07-16", "2025-09-16", "2025-12-16", "2026-02-16", "2026-03-16"],
+  "5Y": ["2021-03-16", "2022-03-16", "2023-03-16", "2024-03-16", "2025-03-16", "2026-03-16"],
 };
 
 const TIME_RANGES = ["1M", "6M", "1Y", "5Y"] as const;
@@ -44,20 +61,27 @@ function fmt(n: number, decimals = 2): string {
   return n.toFixed(decimals);
 }
 
+/** Left padding for Y-axis labels */
+const CHART_PAD_LEFT = 60;
+const CHART_PAD_RIGHT = 16;
+const CHART_PAD_TOP = 16;
+const CHART_PAD_BOTTOM = 32;
+
 function buildPolyline(
   data: number[],
   w: number,
   h: number,
   min: number,
   max: number,
-  pad = 16,
 ): string {
-  const xStep = (w - pad * 2) / (data.length - 1);
+  const plotW = w - CHART_PAD_LEFT - CHART_PAD_RIGHT;
+  const plotH = h - CHART_PAD_TOP - CHART_PAD_BOTTOM;
+  const xStep = plotW / (data.length - 1);
   const range = max - min || 1;
   return data
     .map((v, i) => {
       const norm = (v - min) / range;
-      return `${pad + i * xStep},${h - pad - norm * (h - pad * 2)}`;
+      return `${CHART_PAD_LEFT + i * xStep},${CHART_PAD_TOP + plotH - norm * plotH}`;
     })
     .join(" ");
 }
@@ -69,6 +93,25 @@ function formatTimestamp(iso: string): string {
     return new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   }
 }
+
+function formatDateLabel(dateStr: string): string {
+  try {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-GB', { month: 'short', year: '2-digit' });
+  } catch {
+    return dateStr;
+  }
+}
+
+function percentChange(data: number[]): number {
+  if (data.length < 2) return 0;
+  const first = data[0];
+  const last = data[data.length - 1];
+  if (first === 0) return 0;
+  return ((last - first) / first) * 100;
+}
+
+/* ─── Components ───────────────────────────────────────────── */
 
 /* WhatsApp SVG icon (shared across CTAs) */
 function WhatsAppIcon({ size = 16 }: { size?: number }) {
@@ -126,6 +169,43 @@ export default function GoldAndSilver() {
   const [purityIdx, setPurityIdx] = useState(0);
   const [weight, setWeight] = useState("");
 
+  /* ─── Historical price data state ─── */
+  const [historyData, setHistoryData] = useState<Record<string, HistoryData>>({});
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  const fetchHistory = useCallback(async (range: string) => {
+    // Already cached
+    if (historyData[range] && !historyData[range].fallback) return;
+
+    setHistoryLoading(true);
+    try {
+      const res = await fetch(`/api/history?range=${range}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data: HistoryData = await res.json();
+      setHistoryData((prev) => ({ ...prev, [range]: data }));
+    } catch (err) {
+      console.warn("Failed to fetch history, using fallback:", err);
+      // Use local fallback
+      setHistoryData((prev) => ({
+        ...prev,
+        [range]: {
+          gold: FALLBACK_GOLD[range] || FALLBACK_GOLD["1Y"],
+          silver: FALLBACK_SILVER[range] || FALLBACK_SILVER["1Y"],
+          dates: FALLBACK_DATES[range] || FALLBACK_DATES["1Y"],
+          range,
+          fallback: true,
+        },
+      }));
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, [historyData]);
+
+  // Fetch history when timeRange changes
+  useEffect(() => {
+    fetchHistory(timeRange);
+  }, [timeRange, fetchHistory]);
+
   /* Reset purity selection when metal changes */
   const handleMetalChange = (m: "gold" | "silver") => {
     setMetal(m);
@@ -163,17 +243,49 @@ export default function GoldAndSilver() {
   const chartW = 800;
   const chartH = 300;
 
-  /* Select data for current time range and compute shared Y-axis bounds */
-  const activeGold = GOLD_DATA[timeRange];
-  const activeSilver = SILVER_DATA[timeRange];
+  /* Get chart data for current time range */
+  const currentHistory = historyData[timeRange];
+  const activeGold = currentHistory?.gold || FALLBACK_GOLD[timeRange];
+  const activeSilver = currentHistory?.silver || FALLBACK_SILVER[timeRange];
+  const activeDates = currentHistory?.dates || FALLBACK_DATES[timeRange];
 
+  /* Compute Y-axis bounds with 5% padding */
   const allValues = [...activeGold, ...activeSilver];
   const dataMin = Math.min(...allValues);
   const dataMax = Math.max(...allValues);
-  /* Add 5% padding above and below so lines don't sit right on the edge */
   const yPadding = (dataMax - dataMin) * 0.05 || 0.01;
   const yMin = dataMin - yPadding;
   const yMax = dataMax + yPadding;
+
+  /* Compute Y-axis tick values (5 evenly spaced) */
+  const yTicks = useMemo(() => {
+    const ticks: number[] = [];
+    const step = (yMax - yMin) / 4;
+    for (let i = 0; i <= 4; i++) {
+      ticks.push(yMin + step * i);
+    }
+    return ticks;
+  }, [yMin, yMax]);
+
+  /* Compute X-axis date labels (spread evenly, max 5) */
+  const xLabels = useMemo(() => {
+    if (!activeDates || activeDates.length === 0) return [];
+    const count = Math.min(5, activeDates.length);
+    const labels: { date: string; x: number }[] = [];
+    const plotW = chartW - CHART_PAD_LEFT - CHART_PAD_RIGHT;
+    for (let i = 0; i < count; i++) {
+      const idx = Math.round((i / (count - 1)) * (activeDates.length - 1));
+      labels.push({
+        date: formatDateLabel(activeDates[idx]),
+        x: CHART_PAD_LEFT + (idx / (activeDates.length - 1)) * plotW,
+      });
+    }
+    return labels;
+  }, [activeDates, chartW]);
+
+  /* Calculate real percentage change from historical data */
+  const goldChange = useMemo(() => percentChange(activeGold), [activeGold]);
+  const silverChange = useMemo(() => percentChange(activeSilver), [activeSilver]);
 
   const lastUpdated = formatTimestamp(prices.timestamp);
 
@@ -212,7 +324,7 @@ export default function GoldAndSilver() {
             <div className="bg-navy-card rounded-lg border border-gold/30 p-8">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="font-display text-3xl text-gold">Gold</h2>
-                <ChangeIndicator value={0.3} />
+                <ChangeIndicator value={goldChange} />
               </div>
 
               <div className="space-y-3 mb-6">
@@ -250,7 +362,7 @@ export default function GoldAndSilver() {
             <div className="bg-navy-card rounded-lg border border-[#9CA3AF]/30 p-8">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="font-display text-3xl text-[#C0C0C0]">Silver</h2>
-                <ChangeIndicator value={0.1} />
+                <ChangeIndicator value={silverChange} />
               </div>
 
               <div className="space-y-3 mb-6">
@@ -319,6 +431,11 @@ export default function GoldAndSilver() {
                   {range}
                 </button>
               ))}
+              {historyLoading && (
+                <span className="font-body text-xs text-gold/50 ml-2 animate-pulse">
+                  Loading...
+                </span>
+              )}
             </div>
 
             {/* SVG Chart */}
@@ -326,33 +443,63 @@ export default function GoldAndSilver() {
               <svg
                 viewBox={`0 0 ${chartW} ${chartH}`}
                 className="w-full h-auto"
-                preserveAspectRatio="none"
+                preserveAspectRatio="xMidYMid meet"
               >
-                {/* Grid lines */}
-                {[0.25, 0.5, 0.75].map((frac) => (
-                  <line
-                    key={frac}
-                    x1={16}
-                    y1={chartH - 16 - frac * (chartH - 32)}
-                    x2={chartW - 16}
-                    y2={chartH - 16 - frac * (chartH - 32)}
-                    stroke="#4A5A6A"
-                    strokeWidth={0.5}
-                    strokeDasharray="4 4"
-                    opacity={0.4}
-                  />
+                {/* Y-axis labels */}
+                {yTicks.map((tick, i) => {
+                  const plotH = chartH - CHART_PAD_TOP - CHART_PAD_BOTTOM;
+                  const norm = (tick - yMin) / (yMax - yMin || 1);
+                  const y = CHART_PAD_TOP + plotH - norm * plotH;
+                  return (
+                    <g key={`ytick-${i}`}>
+                      <text
+                        x={CHART_PAD_LEFT - 8}
+                        y={y + 4}
+                        textAnchor="end"
+                        className="fill-current text-muted"
+                        style={{ fontSize: 11, fontFamily: 'system-ui, sans-serif' }}
+                        fill="#9CA3AF"
+                      >
+                        £{tick < 1 ? tick.toFixed(2) : tick.toFixed(0)}
+                      </text>
+                      <line
+                        x1={CHART_PAD_LEFT}
+                        y1={y}
+                        x2={chartW - CHART_PAD_RIGHT}
+                        y2={y}
+                        stroke="#4A5A6A"
+                        strokeWidth={0.5}
+                        strokeDasharray="4 4"
+                        opacity={0.4}
+                      />
+                    </g>
+                  );
+                })}
+
+                {/* X-axis date labels */}
+                {xLabels.map((label, i) => (
+                  <text
+                    key={`xlabel-${i}`}
+                    x={label.x}
+                    y={chartH - 4}
+                    textAnchor="middle"
+                    fill="#9CA3AF"
+                    style={{ fontSize: 10, fontFamily: 'system-ui, sans-serif' }}
+                  >
+                    {label.date}
+                  </text>
                 ))}
 
                 {/* Silver area fill */}
                 <polygon
-                  points={`${buildPolyline(activeSilver, chartW, chartH, yMin, yMax)} ${chartW - 16},${chartH - 16} 16,${chartH - 16}`}
+                  points={`${buildPolyline(activeSilver, chartW, chartH, yMin, yMax)} ${chartW - CHART_PAD_RIGHT},${CHART_PAD_TOP + chartH - CHART_PAD_TOP - CHART_PAD_BOTTOM} ${CHART_PAD_LEFT},${CHART_PAD_TOP + chartH - CHART_PAD_TOP - CHART_PAD_BOTTOM}`}
                   fill="url(#silverGrad)"
                   opacity={0.15}
                 />
 
                 {/* Gold area fill */}
                 <polygon
-                  points={`${buildPolyline(activeGold, chartW, chartH, yMin, yMax)} ${chartW - 16},${chartH - 16} 16,${chartH - 16}`}
+                  points={`${buildPolyline(activeGold, chartW, chartH, yMin, yMax)} ${chartW - CHART_PAD_RIGHT},${CHART_PAD_TOP + chartH - CHART_PAD_TOP - CHART_PAD_BOTTOM} ${CHART_PAD_LEFT},${CHART_PAD_TOP + chartH - CHART_PAD_TOP - CHART_PAD_BOTTOM}`}
                   fill="url(#goldGrad)"
                   opacity={0.15}
                 />
@@ -395,12 +542,17 @@ export default function GoldAndSilver() {
             <div className="flex items-center gap-6 mt-4">
               <div className="flex items-center gap-2">
                 <span className="w-4 h-0.5 bg-gold inline-block rounded" />
-                <span className="font-body text-xs text-muted">Gold</span>
+                <span className="font-body text-xs text-muted">Gold (GBP/g)</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-4 h-0.5 bg-[#9CA3AF] inline-block rounded" />
-                <span className="font-body text-xs text-muted">Silver</span>
+                <span className="font-body text-xs text-muted">Silver (GBP/g)</span>
               </div>
+              {currentHistory?.fallback && (
+                <span className="font-body text-xs text-warm/30 ml-auto">
+                  Indicative data
+                </span>
+              )}
             </div>
 
             {/* Insight text */}
