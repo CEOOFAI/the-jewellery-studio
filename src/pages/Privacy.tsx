@@ -36,8 +36,7 @@ export default function Privacy() {
                 When you use certain features on this website, we may collect the following information:
               </p>
               <ul className="list-disc pl-5 mt-2 space-y-1">
-                <li>Your name and WhatsApp number when you submit an enquiry, book an appointment, save a wishlist item, sign up for stock notifications, or apply for Vault access</li>
-                <li>Occasion details and budget preferences if you use our Anniversary Vault feature</li>
+                <li>Your name and WhatsApp number when you submit an enquiry, save a wishlist item, or sign up for stock notifications</li>
                 <li>Category preferences if you sign up for notifications</li>
               </ul>
               <p className="mt-2">

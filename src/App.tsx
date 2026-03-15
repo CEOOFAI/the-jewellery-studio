@@ -7,8 +7,6 @@ import Footer from "./components/Footer";
 import GoldCursor from "./components/GoldCursor";
 import BackToTop from "./components/BackToTop";
 import WhatsAppFloat from "./components/WhatsAppFloat";
-import AmbientSound from "./components/AmbientSound";
-import Breadcrumbs from "./components/Breadcrumbs";
 import Home from "./pages/Home";
 import Shop from "./pages/Shop";
 import Bespoke from "./pages/Bespoke";
@@ -20,7 +18,6 @@ import GoldAndSilver from "./pages/GoldAndSilver";
 import ProductDetail from "./pages/ProductDetail";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
-import Vault from "./pages/Vault";
 import CruiseLanding from "./pages/CruiseLanding";
 import NotFound from "./pages/NotFound";
 import AdminLayout from "./pages/admin/AdminLayout";
@@ -79,7 +76,6 @@ const pages = [
   { path: "/contact", element: <Contact /> },
   { path: "/blog", element: <Blog /> },
   { path: "/blog/:slug", element: <BlogPost /> },
-  { path: "/vault", element: <Vault /> },
   { path: "/cruise", element: <CruiseLanding /> },
   { path: "/privacy", element: <Privacy /> },
   { path: "*", element: <NotFound /> },
@@ -104,14 +100,12 @@ function MainSite() {
     <>
       <GoldCursor />
       <Navbar />
-      <Breadcrumbs />
       <main>
         <AnimatedRoutes />
       </main>
       <Footer />
       <BackToTop />
       <WhatsAppFloat />
-      <AmbientSound />
     </>
   );
 }

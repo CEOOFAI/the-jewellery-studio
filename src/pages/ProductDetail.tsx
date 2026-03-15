@@ -303,6 +303,8 @@ function ProductNotFound() {
 /*  Provenance Timeline                                                */
 /* ------------------------------------------------------------------ */
 
+// @ts-expect-error ProvenanceTimeline removed from render until real provenance data is available
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function ProvenanceTimeline() {
   return (
     <SectionReveal className="mt-20 max-w-2xl mx-auto">
@@ -649,8 +651,7 @@ export default function ProductDetail() {
           </SectionReveal>
         </div>
 
-        {/* Provenance timeline for pre-owned pieces */}
-        {product.category === "preowned" && <ProvenanceTimeline />}
+        {/* Provenance timeline - disabled until real provenance data is available from the database */}
       </div>
 
       {/* Wishlist modal */}

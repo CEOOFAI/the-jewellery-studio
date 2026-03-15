@@ -95,12 +95,6 @@ export default function Footer() {
           >
             Blog
           </Link>
-          <Link
-            to="/vault"
-            className="font-body text-[11px] uppercase tracking-elegant text-muted hover:text-gold transition-colors duration-300"
-          >
-            Vault
-          </Link>
         </div>
 
         {/* Gold divider */}

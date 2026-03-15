@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import GoldDivider from "../components/GoldDivider";
 import SectionReveal from "../components/SectionReveal";
 import MagneticButton from "../components/MagneticButton";
@@ -114,44 +113,6 @@ export default function Services() {
           )}
         </div>
       ))}
-
-      {/* Quick Links */}
-      <div className="max-w-4xl mx-auto px-6 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <SectionReveal>
-            <Link
-              to="/diamond-grader"
-              className="block bg-navy-card border border-gold/20 rounded-sm p-8 hover:border-gold/50 transition-colors group"
-            >
-              <p className="font-body text-[10px] uppercase tracking-luxe text-gold mb-2">
-                INTERACTIVE GUIDE
-              </p>
-              <h3 className="font-display text-2xl text-warm mb-2 group-hover:text-gold transition-colors">
-                Diamond Grader
-              </h3>
-              <p className="font-body text-sm text-muted leading-relaxed">
-                Learn about Cut, Colour, Clarity, and Carat with our visual guide to the 4Cs of diamonds.
-              </p>
-            </Link>
-          </SectionReveal>
-          <SectionReveal delay={0.1}>
-            <Link
-              to="/repair-tracker"
-              className="block bg-navy-card border border-gold/20 rounded-sm p-8 hover:border-gold/50 transition-colors group"
-            >
-              <p className="font-body text-[10px] uppercase tracking-luxe text-gold mb-2">
-                TRACK YOUR REPAIR
-              </p>
-              <h3 className="font-display text-2xl text-warm mb-2 group-hover:text-gold transition-colors">
-                Repair Tracker
-              </h3>
-              <p className="font-body text-sm text-muted leading-relaxed">
-                Dropped off a piece for repair? Enter your reference code to check the progress.
-              </p>
-            </Link>
-          </SectionReveal>
-        </div>
-      </div>
 
       {/* FAQ Section */}
       <div className="max-w-3xl mx-auto px-6 py-20">

@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import SectionReveal from "../components/SectionReveal";
 import { usePrices } from "../contexts/PricesContext";
 
+// @ts-expect-error Sparkline removed from render, kept for future use
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function Sparkline({ color, points }: { color: string; points: string }) {
   return (
     <svg viewBox="0 0 120 40" className="w-full h-10 mt-3" preserveAspectRatio="none">
@@ -34,10 +36,6 @@ export default function SpotPriceCards() {
           <p className="font-display text-warm text-3xl font-semibold">
             &pound;{data.gold.gbpPerGram.toFixed(2)}<span className="text-lg text-muted">/g</span>
           </p>
-          <Sparkline
-            color="#C9A84C"
-            points="0,30 15,28 30,25 45,27 60,22 75,20 90,18 105,15 120,12"
-          />
         </div>
 
         {/* Silver card */}
@@ -51,10 +49,6 @@ export default function SpotPriceCards() {
           <p className="font-display text-warm text-3xl font-semibold">
             &pound;{data.silver.gbpPerGram.toFixed(2)}<span className="text-lg text-muted">/g</span>
           </p>
-          <Sparkline
-            color="#9BA8B5"
-            points="0,28 15,30 30,26 45,24 60,25 75,22 90,19 105,17 120,15"
-          />
         </div>
       </div>
 
