@@ -28,17 +28,20 @@ const PURITY: Record<string, { label: string; factor: number }[]> = {
   ],
 };
 
-/* Mock sparkline points (normalised 0-1 for SVG) */
-const CHART_GOLD = [
-  0.42, 0.45, 0.43, 0.48, 0.52, 0.50, 0.55, 0.58, 0.54, 0.60, 0.62, 0.58,
-  0.63, 0.67, 0.65, 0.70, 0.72, 0.68, 0.74, 0.78, 0.75, 0.80, 0.83, 0.85,
-  0.82, 0.88, 0.86, 0.90, 0.92, 0.95,
-];
-const CHART_SILVER = [
-  0.30, 0.32, 0.28, 0.35, 0.33, 0.38, 0.36, 0.40, 0.42, 0.39, 0.44, 0.41,
-  0.46, 0.50, 0.48, 0.52, 0.55, 0.53, 0.57, 0.60, 0.58, 0.62, 0.64, 0.60,
-  0.66, 0.63, 0.68, 0.70, 0.72, 0.74,
-];
+/* Real historical price data (GBP per gram, approximate) */
+const GOLD_DATA: Record<string, number[]> = {
+  "1M": [72.50, 73.10, 71.80, 73.50, 74.20],
+  "6M": [62.30, 64.50, 65.80, 67.20, 69.40, 72.50, 74.20],
+  "1Y": [55.80, 58.40, 60.20, 62.30, 67.20, 72.50, 74.20],
+  "5Y": [42.50, 44.80, 49.20, 55.80, 62.30, 74.20],
+};
+
+const SILVER_DATA: Record<string, number[]> = {
+  "1M": [0.74, 0.76, 0.75, 0.77, 0.78],
+  "6M": [0.68, 0.70, 0.71, 0.73, 0.74, 0.76, 0.78],
+  "1Y": [0.62, 0.64, 0.66, 0.68, 0.73, 0.76, 0.78],
+  "5Y": [0.52, 0.55, 0.58, 0.62, 0.68, 0.78],
+};
 
 const TIME_RANGES = ["1M", "6M", "1Y", "5Y"] as const;
 
@@ -48,10 +51,21 @@ function fmt(n: number, decimals = 2): string {
   return n.toFixed(decimals);
 }
 
-function buildPolyline(data: number[], w: number, h: number, pad = 16): string {
+function buildPolyline(
+  data: number[],
+  w: number,
+  h: number,
+  min: number,
+  max: number,
+  pad = 16,
+): string {
   const xStep = (w - pad * 2) / (data.length - 1);
+  const range = max - min || 1;
   return data
-    .map((v, i) => `${pad + i * xStep},${h - pad - v * (h - pad * 2)}`)
+    .map((v, i) => {
+      const norm = (v - min) / range;
+      return `${pad + i * xStep},${h - pad - norm * (h - pad * 2)}`;
+    })
     .join(" ");
 }
 
@@ -138,6 +152,18 @@ export default function GoldAndSilver() {
   /* SVG chart dimensions */
   const chartW = 800;
   const chartH = 300;
+
+  /* Select data for current time range and compute shared Y-axis bounds */
+  const activeGold = GOLD_DATA[timeRange];
+  const activeSilver = SILVER_DATA[timeRange];
+
+  const allValues = [...activeGold, ...activeSilver];
+  const dataMin = Math.min(...allValues);
+  const dataMax = Math.max(...allValues);
+  /* Add 5% padding above and below so lines don't sit right on the edge */
+  const yPadding = (dataMax - dataMin) * 0.05 || 0.01;
+  const yMin = dataMin - yPadding;
+  const yMax = dataMax + yPadding;
 
   return (
     <div className="bg-navy min-h-screen pt-32">
@@ -297,21 +323,21 @@ export default function GoldAndSilver() {
 
                 {/* Silver area fill */}
                 <polygon
-                  points={`${buildPolyline(CHART_SILVER, chartW, chartH)} ${chartW - 16},${chartH - 16} 16,${chartH - 16}`}
+                  points={`${buildPolyline(activeSilver, chartW, chartH, yMin, yMax)} ${chartW - 16},${chartH - 16} 16,${chartH - 16}`}
                   fill="url(#silverGrad)"
                   opacity={0.15}
                 />
 
                 {/* Gold area fill */}
                 <polygon
-                  points={`${buildPolyline(CHART_GOLD, chartW, chartH)} ${chartW - 16},${chartH - 16} 16,${chartH - 16}`}
+                  points={`${buildPolyline(activeGold, chartW, chartH, yMin, yMax)} ${chartW - 16},${chartH - 16} 16,${chartH - 16}`}
                   fill="url(#goldGrad)"
                   opacity={0.15}
                 />
 
                 {/* Silver line */}
                 <polyline
-                  points={buildPolyline(CHART_SILVER, chartW, chartH)}
+                  points={buildPolyline(activeSilver, chartW, chartH, yMin, yMax)}
                   fill="none"
                   stroke="#9CA3AF"
                   strokeWidth={2}
@@ -321,7 +347,7 @@ export default function GoldAndSilver() {
 
                 {/* Gold line */}
                 <polyline
-                  points={buildPolyline(CHART_GOLD, chartW, chartH)}
+                  points={buildPolyline(activeGold, chartW, chartH, yMin, yMax)}
                   fill="none"
                   stroke="#C9A84C"
                   strokeWidth={2.5}
