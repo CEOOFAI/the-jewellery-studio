@@ -24,16 +24,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     // Fetch metal prices and FX rates in parallel
     const [metalsRes, fxRes] = await Promise.all([
-      fetch('https://api.metals.live/v1/spot', { signal: AbortSignal.timeout(8000) }),
-      fetch('https://api.exchangerate-api.com/v4/latest/USD', { signal: AbortSignal.timeout(8000) }),
+      fetch('https://api.metals.live/v1/spot', {
+        headers: { 'User-Agent': 'TheJewelleryStudio/1.0' },
+        signal: AbortSignal.timeout(8000),
+      }),
+      fetch('https://api.exchangerate-api.com/v4/latest/USD', {
+        headers: { 'User-Agent': 'TheJewelleryStudio/1.0' },
+        signal: AbortSignal.timeout(8000),
+      }),
     ]);
 
     if (!metalsRes.ok || !fxRes.ok) {
+      console.error(`API status: metals=${metalsRes.status} (${metalsRes.statusText}), fx=${fxRes.status} (${fxRes.statusText})`);
       throw new Error(`API error: metals=${metalsRes.status}, fx=${fxRes.status}`);
     }
 
     const metalsData = await metalsRes.json();
     const fxData = await fxRes.json();
+
+    console.log('Metals API response shape:', JSON.stringify(metalsData).slice(0, 200));
+    console.log('FX API rates available:', !!fxData.rates?.GBP, !!fxData.rates?.EUR);
 
     // metals.live returns an array of objects, each with a metal name and price
     // Format: [{ gold: 2950.50, silver: 33.20, platinum: ..., palladium: ... }]
@@ -101,7 +111,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       fallback: false,
     });
   } catch (error) {
-    console.error('Price API error:', error);
+    console.error('Price API error:', error instanceof Error ? error.message : error);
+    console.error('Price API full error:', error);
     // Return fallback prices so the site never breaks
     return res.status(200).json(FALLBACK);
   }

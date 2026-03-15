@@ -122,29 +122,6 @@ function WhatsAppIcon({ size = 16 }: { size?: number }) {
   );
 }
 
-/* Change arrow */
-function ChangeIndicator({ value }: { value: number }) {
-  const positive = value >= 0;
-  return (
-    <span
-      className={`inline-flex items-center gap-1 font-body text-sm ${
-        positive ? "text-green-400" : "text-red-400"
-      }`}
-    >
-      <svg
-        width="12"
-        height="12"
-        viewBox="0 0 12 12"
-        fill="none"
-        className={positive ? "" : "rotate-180"}
-      >
-        <path d="M6 2L10 8H2L6 2Z" fill="currentColor" />
-      </svg>
-      {positive ? "+" : ""}
-      {fmt(value)}%
-    </span>
-  );
-}
 
 /* ─── Page Component ────────────────────────────────────────── */
 
@@ -241,7 +218,7 @@ export default function GoldAndSilver() {
 
   /* SVG chart dimensions */
   const chartW = 800;
-  const chartH = 300;
+  const chartH = 220;
 
   /* Get chart data for current time range */
   const currentHistory = historyData[timeRange];
@@ -249,25 +226,36 @@ export default function GoldAndSilver() {
   const activeSilver = currentHistory?.silver || FALLBACK_SILVER[timeRange];
   const activeDates = currentHistory?.dates || FALLBACK_DATES[timeRange];
 
-  /* Compute Y-axis bounds with 5% padding */
-  const allValues = [...activeGold, ...activeSilver];
-  const dataMin = Math.min(...allValues);
-  const dataMax = Math.max(...allValues);
-  const yPadding = (dataMax - dataMin) * 0.05 || 0.01;
-  const yMin = dataMin - yPadding;
-  const yMax = dataMax + yPadding;
+  /* Compute Y-axis bounds for GOLD (independent) */
+  const goldMin = Math.min(...activeGold);
+  const goldMax = Math.max(...activeGold);
+  const goldPadding = (goldMax - goldMin) * 0.08 || 0.5;
+  const goldYMin = goldMin - goldPadding;
+  const goldYMax = goldMax + goldPadding;
 
-  /* Compute Y-axis tick values (5 evenly spaced) */
-  const yTicks = useMemo(() => {
+  /* Compute Y-axis bounds for SILVER (independent) */
+  const silverMin = Math.min(...activeSilver);
+  const silverMax = Math.max(...activeSilver);
+  const silverPadding = (silverMax - silverMin) * 0.08 || 0.01;
+  const silverYMin = silverMin - silverPadding;
+  const silverYMax = silverMax + silverPadding;
+
+  /* Compute Y-axis tick values for each metal */
+  const goldYTicks = useMemo(() => {
     const ticks: number[] = [];
-    const step = (yMax - yMin) / 4;
-    for (let i = 0; i <= 4; i++) {
-      ticks.push(yMin + step * i);
-    }
+    const step = (goldYMax - goldYMin) / 4;
+    for (let i = 0; i <= 4; i++) ticks.push(goldYMin + step * i);
     return ticks;
-  }, [yMin, yMax]);
+  }, [goldYMin, goldYMax]);
 
-  /* Compute X-axis date labels (spread evenly, max 5) */
+  const silverYTicks = useMemo(() => {
+    const ticks: number[] = [];
+    const step = (silverYMax - silverYMin) / 4;
+    for (let i = 0; i <= 4; i++) ticks.push(silverYMin + step * i);
+    return ticks;
+  }, [silverYMin, silverYMax]);
+
+  /* Compute X-axis date labels (shared between both charts) */
   const xLabels = useMemo(() => {
     if (!activeDates || activeDates.length === 0) return [];
     const count = Math.min(5, activeDates.length);
@@ -283,7 +271,7 @@ export default function GoldAndSilver() {
     return labels;
   }, [activeDates, chartW]);
 
-  /* Calculate real percentage change from historical data */
+  /* Calculate percentage change from historical data */
   const goldChange = useMemo(() => percentChange(activeGold), [activeGold]);
   const silverChange = useMemo(() => percentChange(activeSilver), [activeSilver]);
 
@@ -324,7 +312,7 @@ export default function GoldAndSilver() {
             <div className="bg-navy-card rounded-lg border border-gold/30 p-8">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="font-display text-3xl text-gold">Gold</h2>
-                <ChangeIndicator value={goldChange} />
+                <span className="font-body text-xs uppercase tracking-elegant text-gold/60">Live spot price</span>
               </div>
 
               <div className="space-y-3 mb-6">
@@ -362,7 +350,7 @@ export default function GoldAndSilver() {
             <div className="bg-navy-card rounded-lg border border-[#9CA3AF]/30 p-8">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="font-display text-3xl text-[#C0C0C0]">Silver</h2>
-                <ChangeIndicator value={silverChange} />
+                <span className="font-body text-xs uppercase tracking-elegant text-[#9CA3AF]/60">Live spot price</span>
               </div>
 
               <div className="space-y-3 mb-6">
@@ -438,122 +426,147 @@ export default function GoldAndSilver() {
               )}
             </div>
 
-            {/* SVG Chart */}
-            <div className="w-full overflow-hidden">
-              <svg
-                viewBox={`0 0 ${chartW} ${chartH}`}
-                className="w-full h-auto"
-                preserveAspectRatio="xMidYMid meet"
-              >
-                {/* Y-axis labels */}
-                {yTicks.map((tick, i) => {
-                  const plotH = chartH - CHART_PAD_TOP - CHART_PAD_BOTTOM;
-                  const norm = (tick - yMin) / (yMax - yMin || 1);
-                  const y = CHART_PAD_TOP + plotH - norm * plotH;
-                  return (
-                    <g key={`ytick-${i}`}>
-                      <text
-                        x={CHART_PAD_LEFT - 8}
-                        y={y + 4}
-                        textAnchor="end"
-                        className="fill-current text-muted"
-                        style={{ fontSize: 11, fontFamily: 'system-ui, sans-serif' }}
-                        fill="#9CA3AF"
-                      >
-                        £{tick < 1 ? tick.toFixed(2) : tick.toFixed(0)}
-                      </text>
-                      <line
-                        x1={CHART_PAD_LEFT}
-                        y1={y}
-                        x2={chartW - CHART_PAD_RIGHT}
-                        y2={y}
-                        stroke="#4A5A6A"
-                        strokeWidth={0.5}
-                        strokeDasharray="4 4"
-                        opacity={0.4}
-                      />
-                    </g>
-                  );
-                })}
-
-                {/* X-axis date labels */}
-                {xLabels.map((label, i) => (
-                  <text
-                    key={`xlabel-${i}`}
-                    x={label.x}
-                    y={chartH - 4}
-                    textAnchor="middle"
-                    fill="#9CA3AF"
-                    style={{ fontSize: 10, fontFamily: 'system-ui, sans-serif' }}
-                  >
-                    {label.date}
-                  </text>
-                ))}
-
-                {/* Silver area fill */}
-                <polygon
-                  points={`${buildPolyline(activeSilver, chartW, chartH, yMin, yMax)} ${chartW - CHART_PAD_RIGHT},${CHART_PAD_TOP + chartH - CHART_PAD_TOP - CHART_PAD_BOTTOM} ${CHART_PAD_LEFT},${CHART_PAD_TOP + chartH - CHART_PAD_TOP - CHART_PAD_BOTTOM}`}
-                  fill="url(#silverGrad)"
-                  opacity={0.15}
-                />
-
-                {/* Gold area fill */}
-                <polygon
-                  points={`${buildPolyline(activeGold, chartW, chartH, yMin, yMax)} ${chartW - CHART_PAD_RIGHT},${CHART_PAD_TOP + chartH - CHART_PAD_TOP - CHART_PAD_BOTTOM} ${CHART_PAD_LEFT},${CHART_PAD_TOP + chartH - CHART_PAD_TOP - CHART_PAD_BOTTOM}`}
-                  fill="url(#goldGrad)"
-                  opacity={0.15}
-                />
-
-                {/* Silver line */}
-                <polyline
-                  points={buildPolyline(activeSilver, chartW, chartH, yMin, yMax)}
-                  fill="none"
-                  stroke="#9CA3AF"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-
-                {/* Gold line */}
-                <polyline
-                  points={buildPolyline(activeGold, chartW, chartH, yMin, yMax)}
-                  fill="none"
-                  stroke="#C9A84C"
-                  strokeWidth={2.5}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-
-                {/* Gradients */}
-                <defs>
-                  <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#C9A84C" />
-                    <stop offset="100%" stopColor="#C9A84C" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="silverGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#9CA3AF" />
-                    <stop offset="100%" stopColor="#9CA3AF" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-              </svg>
+            {/* ── Gold Chart ── */}
+            <div className="mb-2">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-4 h-0.5 bg-gold inline-block rounded" />
+                  <span className="font-body text-xs text-gold">Gold (GBP/g)</span>
+                </div>
+                <span className={`font-body text-xs ${goldChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {goldChange >= 0 ? '+' : ''}{fmt(goldChange)}% ({timeRange})
+                </span>
+              </div>
+              <div className="w-full overflow-hidden">
+                <svg
+                  viewBox={`0 0 ${chartW} ${chartH}`}
+                  className="w-full h-auto"
+                  preserveAspectRatio="xMidYMid meet"
+                >
+                  <defs>
+                    <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#C9A84C" />
+                      <stop offset="100%" stopColor="#C9A84C" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  {goldYTicks.map((tick, i) => {
+                    const plotH = chartH - CHART_PAD_TOP - CHART_PAD_BOTTOM;
+                    const norm = (tick - goldYMin) / (goldYMax - goldYMin || 1);
+                    const y = CHART_PAD_TOP + plotH - norm * plotH;
+                    return (
+                      <g key={`gold-ytick-${i}`}>
+                        <text
+                          x={CHART_PAD_LEFT - 8}
+                          y={y + 4}
+                          textAnchor="end"
+                          style={{ fontSize: 11, fontFamily: 'system-ui, sans-serif' }}
+                          fill="#9CA3AF"
+                        >
+                          £{tick.toFixed(0)}
+                        </text>
+                        <line
+                          x1={CHART_PAD_LEFT} y1={y}
+                          x2={chartW - CHART_PAD_RIGHT} y2={y}
+                          stroke="#4A5A6A" strokeWidth={0.5}
+                          strokeDasharray="4 4" opacity={0.4}
+                        />
+                      </g>
+                    );
+                  })}
+                  <polygon
+                    points={`${buildPolyline(activeGold, chartW, chartH, goldYMin, goldYMax)} ${chartW - CHART_PAD_RIGHT},${CHART_PAD_TOP + chartH - CHART_PAD_TOP - CHART_PAD_BOTTOM} ${CHART_PAD_LEFT},${CHART_PAD_TOP + chartH - CHART_PAD_TOP - CHART_PAD_BOTTOM}`}
+                    fill="url(#goldGrad)" opacity={0.15}
+                  />
+                  <polyline
+                    points={buildPolyline(activeGold, chartW, chartH, goldYMin, goldYMax)}
+                    fill="none" stroke="#C9A84C" strokeWidth={2.5}
+                    strokeLinecap="round" strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
             </div>
 
-            {/* Legend */}
-            <div className="flex items-center gap-6 mt-4">
-              <div className="flex items-center gap-2">
-                <span className="w-4 h-0.5 bg-gold inline-block rounded" />
-                <span className="font-body text-xs text-muted">Gold (GBP/g)</span>
+            {/* ── Silver Chart ── */}
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-4 h-0.5 bg-[#9CA3AF] inline-block rounded" />
+                  <span className="font-body text-xs text-[#9CA3AF]">Silver (GBP/g)</span>
+                </div>
+                <span className={`font-body text-xs ${silverChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {silverChange >= 0 ? '+' : ''}{fmt(silverChange)}% ({timeRange})
+                </span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="w-4 h-0.5 bg-[#9CA3AF] inline-block rounded" />
-                <span className="font-body text-xs text-muted">Silver (GBP/g)</span>
+              <div className="w-full overflow-hidden">
+                <svg
+                  viewBox={`0 0 ${chartW} ${chartH}`}
+                  className="w-full h-auto"
+                  preserveAspectRatio="xMidYMid meet"
+                >
+                  <defs>
+                    <linearGradient id="silverGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#9CA3AF" />
+                      <stop offset="100%" stopColor="#9CA3AF" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  {silverYTicks.map((tick, i) => {
+                    const plotH = chartH - CHART_PAD_TOP - CHART_PAD_BOTTOM;
+                    const norm = (tick - silverYMin) / (silverYMax - silverYMin || 1);
+                    const y = CHART_PAD_TOP + plotH - norm * plotH;
+                    return (
+                      <g key={`silver-ytick-${i}`}>
+                        <text
+                          x={CHART_PAD_LEFT - 8}
+                          y={y + 4}
+                          textAnchor="end"
+                          style={{ fontSize: 11, fontFamily: 'system-ui, sans-serif' }}
+                          fill="#9CA3AF"
+                        >
+                          £{tick.toFixed(2)}
+                        </text>
+                        <line
+                          x1={CHART_PAD_LEFT} y1={y}
+                          x2={chartW - CHART_PAD_RIGHT} y2={y}
+                          stroke="#4A5A6A" strokeWidth={0.5}
+                          strokeDasharray="4 4" opacity={0.4}
+                        />
+                      </g>
+                    );
+                  })}
+                  {/* X-axis date labels (only on bottom chart) */}
+                  {xLabels.map((label, i) => (
+                    <text
+                      key={`xlabel-${i}`}
+                      x={label.x}
+                      y={chartH - 4}
+                      textAnchor="middle"
+                      fill="#9CA3AF"
+                      style={{ fontSize: 10, fontFamily: 'system-ui, sans-serif' }}
+                    >
+                      {label.date}
+                    </text>
+                  ))}
+                  <polygon
+                    points={`${buildPolyline(activeSilver, chartW, chartH, silverYMin, silverYMax)} ${chartW - CHART_PAD_RIGHT},${CHART_PAD_TOP + chartH - CHART_PAD_TOP - CHART_PAD_BOTTOM} ${CHART_PAD_LEFT},${CHART_PAD_TOP + chartH - CHART_PAD_TOP - CHART_PAD_BOTTOM}`}
+                    fill="url(#silverGrad)" opacity={0.15}
+                  />
+                  <polyline
+                    points={buildPolyline(activeSilver, chartW, chartH, silverYMin, silverYMax)}
+                    fill="none" stroke="#9CA3AF" strokeWidth={2}
+                    strokeLinecap="round" strokeLinejoin="round"
+                  />
+                </svg>
               </div>
-              {currentHistory?.fallback && (
-                <span className="font-body text-xs text-warm/30 ml-auto">
+            </div>
+
+            {/* Fallback indicator */}
+            {currentHistory?.fallback && (
+              <div className="text-right mt-2">
+                <span className="font-body text-xs text-warm/30">
                   Indicative data
                 </span>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Insight text */}
             <p className="font-body text-sm text-warm/70 mt-6">
