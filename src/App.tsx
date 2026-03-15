@@ -18,12 +18,9 @@ import Contact from "./pages/Contact";
 import Privacy from "./pages/Privacy";
 import GoldAndSilver from "./pages/GoldAndSilver";
 import ProductDetail from "./pages/ProductDetail";
-import RepairTracker from "./pages/RepairTracker";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
-import VirtualAppointments from "./pages/VirtualAppointments";
 import Vault from "./pages/Vault";
-import HallmarkIdentifier from "./pages/HallmarkIdentifier";
 import CruiseLanding from "./pages/CruiseLanding";
 import NotFound from "./pages/NotFound";
 import AdminLayout from "./pages/admin/AdminLayout";
@@ -76,16 +73,13 @@ const pages = [
   { path: "/shop", element: <Shop /> },
   { path: "/shop/:id", element: <ProductDetail /> },
   { path: "/bespoke", element: <Bespoke /> },
-  { path: "/repair-tracker", element: <RepairTracker /> },
   { path: "/gold-and-silver", element: <GoldAndSilver /> },
   { path: "/services", element: <Services /> },
   { path: "/about", element: <About /> },
   { path: "/contact", element: <Contact /> },
   { path: "/blog", element: <Blog /> },
   { path: "/blog/:slug", element: <BlogPost /> },
-  { path: "/appointments", element: <VirtualAppointments /> },
   { path: "/vault", element: <Vault /> },
-  { path: "/hallmarks", element: <HallmarkIdentifier /> },
   { path: "/cruise", element: <CruiseLanding /> },
   { path: "/privacy", element: <Privacy /> },
   { path: "*", element: <NotFound /> },
