@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import SectionReveal from "../components/SectionReveal";
+import { usePrices } from "../contexts/PricesContext";
 
 function Sparkline({ color, points }: { color: string; points: string }) {
   return (
@@ -17,6 +18,8 @@ function Sparkline({ color, points }: { color: string; points: string }) {
 }
 
 export default function SpotPriceCards() {
+  const { data } = usePrices();
+
   return (
     <SectionReveal>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-2xl mx-auto">
@@ -29,9 +32,8 @@ export default function SpotPriceCards() {
             Gold
           </p>
           <p className="font-display text-warm text-3xl font-semibold">
-            &pound;68.42<span className="text-lg text-muted">/g</span>
+            &pound;{data.gold.gbpPerGram.toFixed(2)}<span className="text-lg text-muted">/g</span>
           </p>
-          <p className="text-green-400 text-xs font-body mt-1">+0.3% today</p>
           <Sparkline
             color="#C9A84C"
             points="0,30 15,28 30,25 45,27 60,22 75,20 90,18 105,15 120,12"
@@ -47,9 +49,8 @@ export default function SpotPriceCards() {
             Silver
           </p>
           <p className="font-display text-warm text-3xl font-semibold">
-            &pound;0.78<span className="text-lg text-muted">/g</span>
+            &pound;{data.silver.gbpPerGram.toFixed(2)}<span className="text-lg text-muted">/g</span>
           </p>
-          <p className="text-green-400 text-xs font-body mt-1">+0.1% today</p>
           <Sparkline
             color="#9BA8B5"
             points="0,28 15,30 30,26 45,24 60,25 75,22 90,19 105,17 120,15"

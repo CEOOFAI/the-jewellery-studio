@@ -1,14 +1,9 @@
 // Shared constants - single source of truth for rates, labels, etc.
 
-// Mock exchange rates (will be replaced with live data from v2_exchange_rates)
+// Fallback exchange rates used by ProductCard / ProductDetail.
+// Live metal prices come from /api/prices via PricesContext (gold ticker, spot cards, calculator).
 export const EUR_RATE = 1.1624;
 export const USD_RATE = 1.2603;
-
-// Mock spot prices per gram (will be replaced with live data from v2_metal_prices)
-export const SPOT_PRICES = {
-  gold: 68.42,
-  silver: 0.78,
-} as const;
 
 // Category labels used across ProductCard, ProductDetail, etc.
 export const CATEGORY_LABELS: Record<string, string> = {

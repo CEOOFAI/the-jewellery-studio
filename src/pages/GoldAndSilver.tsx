@@ -4,16 +4,9 @@ import GoldDivider from "../components/GoldDivider";
 import SectionReveal from "../components/SectionReveal";
 import MagneticButton from "../components/MagneticButton";
 import useSEO from "../hooks/useSEO";
+import { usePrices } from "../contexts/PricesContext";
 
-/* ─── Mock Data ─────────────────────────────────────────────── */
-
-const SPOT = { gold: 68.42, silver: 0.78 };
-const FX = { eur: 1.1624, usd: 1.2603 };
-
-const GOLD_CHANGE = 0.3;
-const SILVER_CHANGE = 0.1;
-
-const LAST_UPDATED = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+/* ─── Static Data (charts / purity tables) ─────────────────── */
 
 const PURITY: Record<string, { label: string; factor: number }[]> = {
   gold: [
@@ -69,6 +62,14 @@ function buildPolyline(
     .join(" ");
 }
 
+function formatTimestamp(iso: string): string {
+  try {
+    return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  } catch {
+    return new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+}
+
 /* WhatsApp SVG icon (shared across CTAs) */
 function WhatsAppIcon({ size = 16 }: { size?: number }) {
   return (
@@ -111,6 +112,15 @@ export default function GoldAndSilver() {
     url: "/gold-and-silver",
   });
 
+  const { data: prices, loading } = usePrices();
+
+  // Derive spot and FX from live data
+  const SPOT = { gold: prices.gold.gbpPerGram, silver: prices.silver.gbpPerGram };
+  const FX = {
+    eur: prices.gold.eurPerGram / prices.gold.gbpPerGram || 1.1624,
+    usd: prices.gold.usdPerGram / prices.gold.gbpPerGram || 1.2603,
+  };
+
   const [timeRange, setTimeRange] = useState<(typeof TIME_RANGES)[number]>("1Y");
   const [metal, setMetal] = useState<"gold" | "silver">("gold");
   const [purityIdx, setPurityIdx] = useState(0);
@@ -137,14 +147,14 @@ export default function GoldAndSilver() {
       usd: gbp * FX.usd,
       purityLabel: PURITY[metal][purityIdx].label,
     };
-  }, [metal, purityIdx, weight]);
+  }, [metal, purityIdx, weight, SPOT.gold, SPOT.silver, FX.eur, FX.usd]);
 
   /* WhatsApp message builder */
   const whatsappUrl = useMemo(() => {
     const purityLabel = PURITY[metal][purityIdx].label;
     const metalName = metal === "gold" ? "Gold" : "Silver";
     const grams = weight || "unknown";
-    const value = calcResult ? `£${fmt(calcResult.gbp)}` : "not yet calculated";
+    const value = calcResult ? `\u00A3${fmt(calcResult.gbp)}` : "not yet calculated";
     const msg = `Hi Michael, I have ${grams}g of ${purityLabel} ${metalName} and the calculator estimated ${value}. Could I get a full valuation please?`;
     return `https://wa.me/35054013690?text=${encodeURIComponent(msg)}`;
   }, [metal, purityIdx, weight, calcResult]);
@@ -165,6 +175,8 @@ export default function GoldAndSilver() {
   const yMin = dataMin - yPadding;
   const yMax = dataMax + yPadding;
 
+  const lastUpdated = formatTimestamp(prices.timestamp);
+
   return (
     <div className="bg-navy min-h-screen pt-32">
       {/* ── Header ── */}
@@ -177,6 +189,16 @@ export default function GoldAndSilver() {
             Gold &amp; Silver
           </h1>
           <GoldDivider className="mt-4" />
+          {loading && (
+            <p className="font-body text-xs text-gold/50 mt-2 animate-pulse">
+              Fetching live prices...
+            </p>
+          )}
+          {prices.fallback && !loading && (
+            <p className="font-body text-xs text-warm/40 mt-2">
+              Showing indicative prices
+            </p>
+          )}
         </SectionReveal>
       </div>
 
@@ -190,35 +212,35 @@ export default function GoldAndSilver() {
             <div className="bg-navy-card rounded-lg border border-gold/30 p-8">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="font-display text-3xl text-gold">Gold</h2>
-                <ChangeIndicator value={GOLD_CHANGE} />
+                <ChangeIndicator value={0.3} />
               </div>
 
               <div className="space-y-3 mb-6">
                 <div className="flex items-baseline justify-between">
                   <span className="font-body text-sm text-muted">GBP</span>
                   <span className="font-display text-2xl text-warm">
-                    £{fmt(SPOT.gold)}
+                    £{fmt(prices.gold.gbpPerGram)}
                     <span className="text-sm text-muted font-body ml-1">/g</span>
                   </span>
                 </div>
                 <div className="flex items-baseline justify-between">
                   <span className="font-body text-sm text-muted">EUR</span>
                   <span className="font-display text-2xl text-warm">
-                    €{fmt(SPOT.gold * FX.eur)}
+                    €{fmt(prices.gold.eurPerGram)}
                     <span className="text-sm text-muted font-body ml-1">/g</span>
                   </span>
                 </div>
                 <div className="flex items-baseline justify-between">
                   <span className="font-body text-sm text-muted">USD</span>
                   <span className="font-display text-2xl text-warm">
-                    ${fmt(SPOT.gold * FX.usd)}
+                    ${fmt(prices.gold.usdPerGram)}
                     <span className="text-sm text-muted font-body ml-1">/g</span>
                   </span>
                 </div>
               </div>
 
               <p className="font-body text-xs text-dim">
-                Last updated: {LAST_UPDATED}
+                Last updated: {lastUpdated}
               </p>
             </div>
           </SectionReveal>
@@ -228,35 +250,35 @@ export default function GoldAndSilver() {
             <div className="bg-navy-card rounded-lg border border-[#9CA3AF]/30 p-8">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="font-display text-3xl text-[#C0C0C0]">Silver</h2>
-                <ChangeIndicator value={SILVER_CHANGE} />
+                <ChangeIndicator value={0.1} />
               </div>
 
               <div className="space-y-3 mb-6">
                 <div className="flex items-baseline justify-between">
                   <span className="font-body text-sm text-muted">GBP</span>
                   <span className="font-display text-2xl text-warm">
-                    £{fmt(SPOT.silver)}
+                    £{fmt(prices.silver.gbpPerGram)}
                     <span className="text-sm text-muted font-body ml-1">/g</span>
                   </span>
                 </div>
                 <div className="flex items-baseline justify-between">
                   <span className="font-body text-sm text-muted">EUR</span>
                   <span className="font-display text-2xl text-warm">
-                    €{fmt(SPOT.silver * FX.eur)}
+                    €{fmt(prices.silver.eurPerGram)}
                     <span className="text-sm text-muted font-body ml-1">/g</span>
                   </span>
                 </div>
                 <div className="flex items-baseline justify-between">
                   <span className="font-body text-sm text-muted">USD</span>
                   <span className="font-display text-2xl text-warm">
-                    ${fmt(SPOT.silver * FX.usd)}
+                    ${fmt(prices.silver.usdPerGram)}
                     <span className="text-sm text-muted font-body ml-1">/g</span>
                   </span>
                 </div>
               </div>
 
               <p className="font-body text-xs text-dim">
-                Last updated: {LAST_UPDATED}
+                Last updated: {lastUpdated}
               </p>
             </div>
           </SectionReveal>
