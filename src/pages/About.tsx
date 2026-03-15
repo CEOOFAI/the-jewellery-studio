@@ -2,12 +2,16 @@ import GoldDivider from "../components/GoldDivider";
 import SectionReveal from "../components/SectionReveal";
 import AnimatedCounter from "../components/AnimatedCounter";
 import MagneticButton from "../components/MagneticButton";
-import usePageTitle from "../hooks/usePageTitle";
+import useSEO from "../hooks/useSEO";
 
 export default function About() {
-  usePageTitle("About Michael & Stephanie Scott");
+  useSEO({
+    title: "About Michael | The Jewellery Studio",
+    description: "Meet Michael, Gibraltar's trusted jeweller with 38 years of experience in fine jewellery, valuations, and craftsmanship.",
+    url: "/about",
+  });
   return (
-    <div className="bg-navy min-h-screen pt-24 pb-20">
+    <div className="bg-navy min-h-screen pt-32 pb-20">
       <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
         <SectionReveal>
@@ -72,7 +76,7 @@ export default function About() {
 
             <div className="text-center">
               <p className="font-display text-2xl md:text-3xl text-gold">
-                Main Street
+                5 Bell Lane
               </p>
               <p className="font-body text-[10px] uppercase tracking-elegant text-muted mt-1">
                 Location

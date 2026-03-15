@@ -1,11 +1,14 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import usePageTitle from "../hooks/usePageTitle";
+import useSEO from "../hooks/useSEO";
 import GoldDivider from "../components/GoldDivider";
 import SectionReveal from "../components/SectionReveal";
 import MagneticButton from "../components/MagneticButton";
 import GoldParticles from "../components/GoldParticles";
 import HeroRing from "../components/HeroRing";
+import SpotPriceCards from "../components/SpotPriceCards";
+import AnniversaryVaultForm from "../components/AnniversaryVaultForm";
+import CruiseBanner from "../components/CruiseBanner";
 
 const containerVariants = {
   hidden: {},
@@ -118,13 +121,21 @@ const categories = [
 ];
 
 export default function Home() {
-  usePageTitle();
+  useSEO({
+    title: "The Jewellery Studio | Gibraltar's Premier Jeweller",
+    description: "Bespoke jewellery, expert repairs, valuations, and pre-owned luxury pieces. 38 years of craftsmanship at 5 Bell Lane, Gibraltar.",
+    url: "/",
+  });
+
+  // JSON-LD structured data lives in index.html (more complete version with geo, ratings, services).
+  // Do NOT add a duplicate here.
+
   const headingWords = ["The", "Jewellery", "Studio"];
 
   return (
     <>
       {/* Section 1: Hero */}
-      <section className="min-h-screen relative overflow-hidden flex items-center justify-center">
+      <section className="min-h-screen relative overflow-hidden flex items-center justify-center pt-[110px]">
         <img
           src="/images/shop-interior.jpg"
           alt="The Jewellery Studio interior"
@@ -185,7 +196,7 @@ export default function Home() {
             </motion.div>
           </motion.div>
 
-          <div className="w-[280px] h-[280px] md:w-[380px] md:h-[380px] relative z-20 mx-auto mt-8">
+          <div className="w-[200px] h-[200px] sm:w-[280px] sm:h-[280px] md:w-[380px] md:h-[380px] relative z-20 mx-auto mt-8">
             <HeroRing />
           </div>
         </div>
@@ -197,6 +208,9 @@ export default function Home() {
           </svg>
         </div>
       </section>
+
+      {/* Cruise Ship Banner (shows only when ships in port) */}
+      <CruiseBanner />
 
       {/* Section 2: From Our Collection */}
       <section className="bg-cream py-20 md:py-28">
@@ -229,7 +243,7 @@ export default function Home() {
         {/* Mobile horizontal scroll */}
         <div className="flex md:hidden overflow-x-auto snap-x gap-5 px-6 pb-4">
           {collectionImages.map((img, i) => (
-            <div key={i} className="w-[380px] h-[280px] overflow-hidden flex-shrink-0 snap-center">
+            <div key={i} className="w-[85vw] max-w-[380px] h-[280px] overflow-hidden flex-shrink-0 snap-center">
               <img
                 src={img.src}
                 alt={img.alt}
@@ -300,9 +314,6 @@ export default function Home() {
               </svg>
             ))}
           </div>
-          <p className="font-body text-xs text-muted">
-            4 reviews on Google
-          </p>
           <GoldDivider className="mt-4 mb-12" />
         </SectionReveal>
 
@@ -366,7 +377,7 @@ export default function Home() {
           <GoldDivider className="mb-12" />
         </SectionReveal>
 
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-4 md:gap-8 max-w-5xl mx-auto px-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 md:gap-8 max-w-5xl mx-auto px-6">
           {categories.map((cat, i) => (
             <SectionReveal key={i} delay={i * 0.06}>
               <Link to={`/shop?category=${cat.slug}`} className="block text-center group">
@@ -377,19 +388,46 @@ export default function Home() {
                     loading="lazy"
                     className="object-cover w-full h-full group-hover:scale-[1.04] transition-transform duration-500"
                   />
-                  <div className="absolute inset-0 bg-[rgba(27,42,63,0.65)] md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity flex items-center justify-center">
+                  <div className="absolute inset-0 bg-[rgba(27,42,63,0.65)] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <span className="font-body text-[9px] md:text-xs uppercase tracking-elegant text-white">
                       {cat.name}
                     </span>
                   </div>
                 </div>
+                <p className="font-body text-[9px] md:text-xs uppercase tracking-elegant text-gold mt-2 md:hidden">
+                  {cat.name}
+                </p>
               </Link>
             </SectionReveal>
           ))}
         </div>
       </section>
 
-      {/* Section 5: Instagram Strip */}
+      {/* Section 6: Gold & Silver Spot Prices */}
+      <section className="bg-navy py-20 md:py-28">
+        <SectionReveal className="text-center px-4">
+          <p className="font-body text-[11px] uppercase tracking-luxe text-gold mb-4">
+            TODAY'S PRICES
+          </p>
+          <h2 className="font-display text-3xl md:text-[42px] text-warm mb-4">
+            Gold &amp; Silver Spot Prices
+          </h2>
+          <GoldDivider className="mb-12" />
+        </SectionReveal>
+
+        <div className="px-6">
+          <SpotPriceCards />
+        </div>
+      </section>
+
+      {/* Section 7: Anniversary & Birthday Vault */}
+      <section className="bg-navy-deep py-20 md:py-28">
+        <div className="px-6">
+          <AnniversaryVaultForm />
+        </div>
+      </section>
+
+      {/* Section 8: Instagram Strip */}
       <section className="bg-white py-20">
         <div className="text-center px-4">
           <div className="flex items-center justify-center gap-4 mb-4">
@@ -411,9 +449,7 @@ export default function Home() {
             @the_studio_gibraltar
           </a>
 
-          <p className="font-body text-[10px] uppercase tracking-elegant text-muted mt-3 mb-6">
-            1,437 FOLLOWERS
-          </p>
+          <div className="mt-3 mb-6" />
 
           <a
             href="https://www.instagram.com/the_studio_gibraltar/"

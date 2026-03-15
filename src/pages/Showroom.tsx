@@ -1,3 +1,6 @@
+// DISABLED: This page is not in the router or navbar. Brand images may not exist.
+// Keep for future use but do not import or route to this component.
+
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import GoldDivider from "../components/GoldDivider";
@@ -115,7 +118,7 @@ export default function Showroom() {
       <section className="bg-navy-deep py-20">
         <SectionReveal className="text-center px-6">
           <p className="font-body text-[11px] uppercase tracking-luxe text-gold mb-4">
-            152 MAIN STREET, GIBRALTAR
+            5 BELL LANE, GIBRALTAR GX11 1AA
           </p>
           <h3 className="font-display text-3xl text-warm mb-6">
             Visit Us In Person

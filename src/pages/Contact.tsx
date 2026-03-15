@@ -1,12 +1,16 @@
 import GoldDivider from "../components/GoldDivider";
 import SectionReveal from "../components/SectionReveal";
 import MagneticButton from "../components/MagneticButton";
-import usePageTitle from "../hooks/usePageTitle";
+import useSEO from "../hooks/useSEO";
 
 export default function Contact() {
-  usePageTitle("Contact Us in Gibraltar");
+  useSEO({
+    title: "Contact | The Jewellery Studio",
+    description: "Visit us at 5 Bell Lane, Gibraltar. Get in touch via WhatsApp or drop by the studio.",
+    url: "/contact",
+  });
   return (
-    <div className="bg-navy min-h-screen pt-24 pb-20">
+    <div className="bg-navy min-h-screen pt-32 pb-20">
       <div className="max-w-5xl mx-auto px-6">
         {/* Header */}
         <SectionReveal className="text-center">
@@ -36,15 +40,15 @@ export default function Contact() {
 
         {/* Info blocks */}
         <SectionReveal delay={0.2}>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 mt-14 max-w-2xl mx-auto text-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mt-14 max-w-2xl mx-auto text-center">
             <div>
               <p className="font-body text-[10px] uppercase tracking-luxe text-gold mb-3">
                 ADDRESS
               </p>
               <p className="font-display text-[15px] text-warm leading-relaxed">
-                152 Main Street
+                5 Bell Lane
                 <br />
-                Gibraltar
+                Gibraltar GX11 1AA
               </p>
             </div>
 

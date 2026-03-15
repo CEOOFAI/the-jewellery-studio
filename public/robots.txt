@@ -1,5 +1,4 @@
 User-agent: *
 Allow: /
-Disallow: /internal/
-
-Sitemap: https://thejewellerystudio.com/sitemap.xml
+Disallow: /admin
+Sitemap: https://the-jewellery-studio-v2.vercel.app/sitemap.xml

@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
+import GoldTicker from "./GoldTicker";
 
 const navLinks = [
   { label: "HOME", to: "/" },
   { label: "SHOP", to: "/shop" },
-  { label: "SHOWROOM", to: "/showroom" },
+  { label: "GOLD & SILVER", to: "/gold-and-silver" },
   { label: "SERVICES", to: "/services" },
+  { label: "BESPOKE", to: "/bespoke" },
   { label: "ABOUT", to: "/about" },
   { label: "CONTACT", to: "/contact" },
 ];
@@ -107,6 +109,14 @@ export default function Navbar() {
           style={{ width: scrolled ? "100%" : "0%" }}
         />
       </nav>
+
+      {/* Gold/Silver price ticker */}
+      <div
+        className="fixed left-0 right-0 z-30 transition-all duration-[400ms] ease-out"
+        style={{ top: scrolled ? 64 : 80 }}
+      >
+        <GoldTicker />
+      </div>
 
       {/* Mobile menu */}
       <AnimatePresence>

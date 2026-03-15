@@ -19,15 +19,16 @@ export default function Breadcrumbs() {
   return (
     <nav
       aria-label="Breadcrumb"
-      className="absolute top-20 left-6 z-30"
+      className="absolute left-6 z-20"
+      style={{ top: 120 }}
     >
       <ol className="flex items-center gap-2 font-body text-[10px] uppercase tracking-elegant">
         <li>
-          <Link to="/" className="text-warm/40 hover:text-gold transition-colors">
+          <Link to="/" className="text-navy/40 hover:text-gold transition-colors">
             Home
           </Link>
         </li>
-        <li className="text-warm/20">/</li>
+        <li className="text-navy/20">/</li>
         <li className="text-gold">{pageNames[segment]}</li>
       </ol>
     </nav>

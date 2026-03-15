@@ -1,14 +1,6 @@
 import { motion } from "framer-motion";
 import type { Product } from "../lib/supabase";
-
-const categoryLabels: Record<string, string> = {
-  watches: "Watches",
-  engagement: "Engagement",
-  gold: "Gold",
-  necklaces: "Necklaces",
-  diamonds: "Diamonds",
-  preowned: "Pre-Owned",
-};
+import { CATEGORY_LABELS, EUR_RATE, USD_RATE } from "../lib/constants";
 
 interface ProductCardProps {
   product: Product;
@@ -19,6 +11,12 @@ interface ProductCardProps {
 export default function ProductCard({ product, onClick, index }: ProductCardProps) {
   const formattedPrice = product.selling_price
     ? `\u00A3${product.selling_price.toLocaleString("en-GB")}`
+    : null;
+  const eurPrice = product.selling_price
+    ? `\u20AC${Math.round(product.selling_price * EUR_RATE).toLocaleString("en-GB")}`
+    : null;
+  const usdPrice = product.selling_price
+    ? `$${Math.round(product.selling_price * USD_RATE).toLocaleString("en-GB")}`
     : null;
 
   return (
@@ -35,6 +33,7 @@ export default function ProductCard({ product, onClick, index }: ProductCardProp
           <img
             src={product.image_url}
             alt={product.name}
+            loading="lazy"
             className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-[1.04]"
           />
         ) : (
@@ -81,15 +80,20 @@ export default function ProductCard({ product, onClick, index }: ProductCardProp
       {/* Text */}
       <div className="px-3 py-4">
         <p className="font-body text-[9px] tracking-luxe uppercase text-gold mb-1">
-          {categoryLabels[product.category] || product.category}
+          {CATEGORY_LABELS[product.category] || product.category}
         </p>
         <h3 className="font-display text-lg text-navy font-light truncate">
           {product.name}
         </h3>
         {formattedPrice ? (
-          <p className="font-body text-sm text-gold-muted mt-1">
-            {formattedPrice}
-          </p>
+          <>
+            <p className="font-body text-sm text-gold-muted mt-1">
+              {formattedPrice}
+            </p>
+            <p className="font-body text-[9px] text-muted/60 mt-0.5">
+              {eurPrice} &middot; {usdPrice}
+            </p>
+          </>
         ) : (
           <p className="font-body text-[10px] tracking-wide uppercase text-gold-muted mt-1">
             Price on request

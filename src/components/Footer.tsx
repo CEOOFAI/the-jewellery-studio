@@ -18,7 +18,7 @@ export default function Footer() {
 
         {/* Address + Hours */}
         <p className="font-body text-xs text-muted mb-0">
-          152 Main Street, Gibraltar
+          5 Bell Lane, Gibraltar GX11 1AA
         </p>
         <p className="font-body text-[11px] text-dim mt-1">
           Mon-Fri 10am-6pm &middot; Sat 10am-2pm
@@ -100,6 +100,19 @@ export default function Footer() {
         >
           Privacy Policy
         </Link>
+
+        {/* Powered by */}
+        <p className="font-body text-[9px] text-dim/50 mt-4">
+          Powered by{" "}
+          <a
+            href="https://yourfrontdesk.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-gold transition-colors"
+          >
+            YourFrontDesk
+          </a>
+        </p>
       </div>
     </footer>
   );

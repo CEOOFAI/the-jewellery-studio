@@ -21,7 +21,7 @@ export default function WhatsAppFloat() {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.8 }}
           transition={{ duration: 0.3 }}
-          className="fixed bottom-6 left-6 z-40 w-14 h-14 rounded-full bg-[#25D366] flex items-center justify-center shadow-[0_4px_20px_rgba(37,211,102,0.4)] hover:shadow-[0_4px_30px_rgba(37,211,102,0.6)] hover:scale-105 transition-all duration-300"
+          className="fixed bottom-6 left-6 z-40 w-14 h-14 rounded-full bg-[#C9A84C] flex items-center justify-center shadow-[0_4px_20px_rgba(201,168,76,0.4)] hover:shadow-[0_4px_30px_rgba(201,168,76,0.6)] hover:scale-105 transition-all duration-300"
           aria-label="Chat on WhatsApp"
         >
           <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
